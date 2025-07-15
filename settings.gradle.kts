@@ -1,23 +1,26 @@
-//  ──────────────────────────────────────────────────────────────────────────────
-//  Настройка репозиториев для плагинов и зависимостей на уровне settings
-//  ──────────────────────────────────────────────────────────────────────────────
+val kotlinVersion: String by settings
+val ktorVersion: String by settings
+val telegramBotVersion: String by settings
 
 pluginManagement {
     repositories {
-        gradlePluginPortal()    // для плагинов (kotlin, ktor и т.д.)
-        mavenCentral()          // сюда Gradle будет загружать транзитивы плагинов (Jib, Jackson…)
+        gradlePluginPortal()
+        mavenCentral()
     }
     plugins {
-        kotlin("jvm") version "1.9.10"
-        id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-        id("io.ktor.plugin") version "3.2.1"
+        // Версию Kotlin-плагина берем из gradle.properties (kotlinVersion = "2.1.0")
+        kotlin("jvm") version kotlinVersion
+        kotlin("plugin.serialization") version kotlinVersion
+
+        // Версию Ktor-плагина тоже можно вынести в properties (ktorVersion = "3.2.1")
+        id("io.ktor.plugin") version ktorVersion
     }
 }
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        mavenCentral()          // все библиотеки
+        mavenCentral()
         maven("https://jitpack.io")
     }
 }

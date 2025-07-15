@@ -1,13 +1,13 @@
-plugins {
-    kotlin("jvm")
-    `java-library`
-}
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 
-group = "com.bookingbot.libs"
-version = "0.1.0-SNAPSHOT"
+plugins {
+    // Версию плагина берём из settings.gradle.kts → pluginManagement
+    kotlin("jvm")
+}
 
 java {
     toolchain {
+        // Жёстко фиксируем JDK 17 для сборки этого модуля
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
@@ -17,6 +17,11 @@ repositories {
 }
 
 dependencies {
-    // сюда будете складывать общие зависимости, например:
-    // api("org.apache.commons:commons-text:1.10.0")
+    // Если в будущем появятся общие библиотеки,
+    // которые вы хотите транзитивно подтягивать в booking-api и bot-gateway,
+    // объявляйте их здесь через `api(...)`, а не `implementation(...)`:
+    //
+    // api("com.some:shared-lib:1.2.3")
+    //
+    // Тогда во всех зависимых модулях они будут доступны автоматически.
 }

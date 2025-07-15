@@ -1,21 +1,16 @@
+//  ──────────────────────────────────────────────────────────────────────────────
+//  Здесь только «declare & defer» — версии плагинов, применяться будут в подпроектах
+//  ──────────────────────────────────────────────────────────────────────────────
+
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm")                              apply false
+    id("org.jetbrains.kotlin.plugin.serialization") apply false
+    id("io.ktor.plugin")                       apply false
+    application                                apply false
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(17)
+// опционально: общие свойства группы/версии
+allprojects {
+    group = "com.bookingbot"
+    version = "0.1.0-SNAPSHOT"
 }

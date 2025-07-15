@@ -37,8 +37,8 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven("https://jitpack.io")
-        // Add the Ktor EAP repository to resolve version 3.x artifacts
-        maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
+        // The EAP repository is no longer needed and should be removed
+        // maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     }
 }
 

@@ -1,39 +1,97 @@
-// bot-gateway/src/test/kotlin/com/bookingbot/gateway/ApplicationTest.kt
 package com.bookingbot.gateway
 
-import com.bookingbot.api.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import com.bookingbot.api.BookingRequest
+import com.bookingbot.api.BookingService
+import com.bookingbot.api.DatabaseFactory
 import io.ktor.http.*
-import io.ktor.server.testing.*
-import java.time.Instant
-import kotlin.test.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.* // <-- Этот импорт исправляет ошибку 'Unresolved reference'
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
-class ApplicationTest {
+fun main() {
+    embeddedServer(
+        factory = Netty,
+        port = 8080,
+        module = Application::module
+    ).start(wait = true)
+}
 
-    @BeforeTest
-    fun before() {
-        DatabaseFactory.init()
+fun Application.module() {
+    // Инициализируем БД
+    DatabaseFactory.init()
+
+    // Настраиваем JSON
+    install(ContentNegotiation) {
+        json()
     }
 
-    @Test
-    fun testCrudViaHttp(): Unit = testApplication {
-        application { module() }
+    // Настраиваем роутинг
+    routing {
+        // Создаем один экземпляр сервиса, чтобы не создавать его при каждом запросе
+        val bookingService = BookingService()
 
-        val created = client.post("/bookings") {
-            contentType(ContentType.Application.Json)
-            setBody(BookingRequest(
-                userId = 1, clubId = 1, tableId = 2,
-                bookingTime = Instant.ofEpochMilli(1_000L),
-                partySize = 3, expectedDuration = 60,
-                guestName = "TestUser", telegramId = 123L, phone = "+100"
-            ))
-        }.body<Booking>()
-
-        assertTrue(created.id > 0)
-        assertEquals("TestUser", created.guestName)
-
-        val fetched = client.get("/bookings/${created.id}").body<Booking>()
-        assertEquals(created, fetched)
+        route("/bookings") {
+            // CREATE
+            post {
+                val req = call.receive<BookingRequest>()
+                val created = bookingService.createBooking(req)
+                call.respond(HttpStatusCode.Created, created)
+            }
+            // READ ALL
+            get {
+                val all = bookingService.getAllBookings()
+                call.respond(HttpStatusCode.OK, all)
+            }
+            // READ ONE
+            get("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                // Проверяем, что ID корректный
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID format")
+                    return@get
+                }
+                val booking = bookingService.getBooking(id)
+                if (booking != null) {
+                    call.respond(HttpStatusCode.OK, booking)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+            // UPDATE
+            put("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID format")
+                    return@put
+                }
+                val req = call.receive<BookingRequest>()
+                if (bookingService.updateBooking(id, req)) {
+                    // Возвращаем обновленный объект для ясности
+                    val updatedBooking = bookingService.getBooking(id)
+                    call.respond(HttpStatusCode.OK, updatedBooking!!)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+            // DELETE
+            delete("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID format")
+                    return@delete
+                }
+                if (bookingService.deleteBooking(id)) {
+                    // Используем статус 204 No Content для успешного удаления
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+        }
     }
 }

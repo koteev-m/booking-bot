@@ -1,20 +1,19 @@
+// libs/build.gradle.kts
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
-    // Версию плагина берём из settings.gradle.kts → pluginManagement
     kotlin("jvm")
+    `java-library` // Используем java-library для потенциального api/implementation
 }
 
 java {
     toolchain {
-        // Жёстко фиксируем JDK 17 для сборки этого модуля
+        // Отличная практика — жёстко фиксировать JDK для модуля
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
-repositories {
-    mavenCentral()
-}
+// Репозитории здесь не нужны, они наследуются из settings.gradle.kts
 
 dependencies {
     // Если в будущем появятся общие библиотеки,

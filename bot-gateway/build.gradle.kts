@@ -1,16 +1,15 @@
+// bot-gateway/build.gradle.kts
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
-    // версии плагинов задаются в settings.gradle.kts → pluginManagement
     kotlin("jvm")
     id("io.ktor.plugin")
     application
 }
 
-group = "com.bookingbot"
-version = "1.0.0"
+// group и version наследуются из корневого проекта
 
 application {
     mainClass.set("com.bookingbot.gateway.ApplicationKt")
@@ -22,18 +21,7 @@ java {
     }
 }
 
-kotlin {
-    // JVM toolchain для компиляции Kotlin-кода
-    jvmToolchain {
-        (this as org.gradle.jvm.toolchain.JavaToolchainSpec)
-            .languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
+// repositories не нужен, наследуется из settings.gradle.kts
 
 dependencies {
     implementation(project(":booking-api"))
@@ -56,7 +44,9 @@ dependencies {
     testImplementation("com.h2database:h2:2.1.214")
 
     // --- Тестовые зависимости ---
-    testImplementation("io.ktor:ktor-server-test-host-jvm")
+    testImplementation("io.ktor:ktor-server-test-host")
+
+    // The rest of the test dependencies are correct.
     testImplementation("io.ktor:ktor-client-cio")
     testImplementation("io.ktor:ktor-client-content-negotiation")
     testImplementation("io.ktor:ktor-serialization-kotlinx-json")
@@ -64,12 +54,14 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("com.h2database:h2:2.1.214")
 }
 
+// Настройка компилятора Kotlin
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += "-Xjsr305=strict"
+    compilerOptions {
+        // jvmTarget не нужен, так как он наследуется из java.toolchain
+        freeCompilerArgs.add("-Xjsr305=strict")
     }
 }
 
@@ -77,7 +69,10 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// при сборке ZIP/TAR — исключаем дубликаты, чтобы не падать на одинаковых META-INF
+// Отличная практика для избежания проблем при сборке дистрибутива
 tasks.named<Tar>("distTar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+tasks.named<org.gradle.api.tasks.bundling.Zip>("distZip") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

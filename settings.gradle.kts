@@ -1,46 +1,27 @@
-// settings.gradle.kts
-
-// The plugins block is evaluated early and has a restricted scope.
-// We cannot access outside variables directly.
-// We must read the properties inside or pass them in a specific way.
 pluginManagement {
-    // Reading properties reliably for the plugins block
-    val props = java.util.Properties()
-    val propertiesFile = file("gradle.properties")
-    if (propertiesFile.exists()) {
-        propertiesFile.inputStream().use { props.load(it) }
-    } else {
-        // It's better to fail early if the properties file is missing
-        throw GradleException("Could not find gradle.properties in root directory")
+    val props = java.util.Properties().apply {
+        file("gradle.properties").inputStream().use { load(it) }
     }
-
-    // It's crucial to ensure the property is not null to avoid ambiguity
     val kotlinVersion = props.getProperty("kotlinVersion")
-        ?: throw GradleException("kotlinVersion not found in gradle.properties")
-    val ktorVersion = props.getProperty("ktorVersion")
-        ?: throw GradleException("ktorVersion not found in gradle.properties")
+    val ktorVersion  = props.getProperty("ktorVersion")
 
     repositories {
         gradlePluginPortal()
         mavenCentral()
     }
-
     plugins {
-        kotlin("jvm") version kotlinVersion
+        kotlin("jvm")                        version kotlinVersion
         id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion
-        id("io.ktor.plugin") version ktorVersion
+        id("io.ktor.plugin")                 version ktorVersion
+        id("com.github.johnrengelman.shadow") version "8.1.1"
     }
 }
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
         maven("https://jitpack.io")
-        // The EAP repository is no longer needed and should be removed
-        // maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     }
 }
-
 rootProject.name = "booking_bot"
 include("booking-api", "bot-gateway", "libs")

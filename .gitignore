@@ -48,3 +48,7 @@ bin/
 ### Mac OS ###
 .DS_Store.idea/
 .idea/
+
+# Local properties and secrets
+local.properties
+/secrets/

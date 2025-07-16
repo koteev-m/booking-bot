@@ -1,0 +1,14 @@
+services:
+  bot-gateway:
+    build:
+      context: ./bot-gateway
+      dockerfile: Dockerfile
+    image: booking-bot:latest
+    secrets:
+      - telegram_bot_token
+    ports:
+      - "8080:8080"
+
+secrets:
+  telegram_bot_token:
+    file: ./secrets/telegram_bot_token.txt

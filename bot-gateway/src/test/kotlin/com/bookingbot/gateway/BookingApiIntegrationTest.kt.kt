@@ -1,5 +1,3 @@
-// bot-gateway/src/test/kotlin/com/bookingbot/gateway/BookingApiIntegrationTest.kt
-
 package com.bookingbot.gateway
 
 import com.bookingbot.api.BookingRequest
@@ -11,18 +9,17 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import io.ktor.http.*
+import java.time.Instant
 import kotlin.test.*
 
 class BookingApiIntegrationTest {
 
     @Test
     fun `full CRUD lifecycle via HTTP`() = testApplication {
-        // Подключаем модуль приложения
         application {
             module()
         }
 
-        // Клиент с JSON support
         val client = createClient {
             install(ContentNegotiation) {
                 json()
@@ -30,7 +27,13 @@ class BookingApiIntegrationTest {
         }
 
         // 1) Create
-        val createReq = BookingRequest(userId = 42, tableId = 99, at = 1_234_567L)
+        val createReq = BookingRequest(
+            userId = 42,
+            clubId = 1,
+            tableId = 99,
+            bookingTime = Instant.ofEpochMilli(1_234_567L),
+            partySize = 4
+        )
         val createResponse = client.post("/bookings") {
             contentType(ContentType.Application.Json)
             setBody(createReq)
@@ -39,7 +42,7 @@ class BookingApiIntegrationTest {
         val created: Booking = createResponse.body()
         assertEquals(createReq.userId, created.userId)
         assertEquals(createReq.tableId, created.tableId)
-        assertEquals(createReq.at, created.at)
+        assertEquals(createReq.bookingTime, created.bookingTime)
 
         // 2) Read single
         val getResponse = client.get("/bookings/${created.id}")
@@ -54,7 +57,13 @@ class BookingApiIntegrationTest {
         assertTrue(all.contains(created))
 
         // 4) Update
-        val updateReq = BookingRequest(userId = 7, tableId = 8, at = 9L)
+        val updateReq = BookingRequest(
+            userId = 7,
+            clubId = 2,
+            tableId = 8,
+            bookingTime = Instant.ofEpochMilli(9_876_543L),
+            partySize = 2
+        )
         val updateResponse = client.put("/bookings/${created.id}") {
             contentType(ContentType.Application.Json)
             setBody(updateReq)
@@ -65,7 +74,7 @@ class BookingApiIntegrationTest {
         assertEquals(created.id, updatedFetched.id)
         assertEquals(updateReq.userId, updatedFetched.userId)
         assertEquals(updateReq.tableId, updatedFetched.tableId)
-        assertEquals(updateReq.at, updatedFetched.at)
+        assertEquals(updateReq.bookingTime, updatedFetched.bookingTime)
 
         // 5) Delete
         val deleteResponse = client.delete("/bookings/${created.id}")

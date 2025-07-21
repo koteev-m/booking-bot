@@ -1,5 +1,5 @@
 import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Zip // <<< ИСПРАВЛЕНО: импортируем правильный класс Zip
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.bundling.Tar
 
@@ -7,7 +7,7 @@ plugins {
     kotlin("jvm")                 // версия Kotlin берётся из settings.gradle.kts
     id("io.ktor.plugin")          // версия Ktor берётся из settings.gradle.kts
     id("com.github.johnrengelman.shadow") // Shadow-плагин версиями управляем в settings.gradle.kts
-    application
+    id("application")             // Плагин application
 }
 
 group = "com.bookingbot"
@@ -27,14 +27,11 @@ kotlin {
     jvmToolchain(17)
 }
 
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
+// Блок repositories здесь не нужен, так как он централизован в settings.gradle.kts
 
 // подтягиваем переменные, которые объявлены в root gradle.properties
-val ktorVersion: String        by project
-val coroutinesVersion: String  by project
+val ktorVersion: String by project
+val coroutinesVersion: String by project
 
 dependencies {
     implementation(project(":booking-api"))
@@ -70,7 +67,7 @@ dependencies {
 
     // JUnit5 + Kotlin Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.1.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.9.23") // Явно указал версию для стабильности
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 }
 
@@ -91,7 +88,7 @@ tasks.named<org.gradle.jvm.tasks.Jar>("shadowJar") {
 }
 
 // Исключаем дубли в дистрибутивах
-tasks.named<Copy>("distZip") {
+tasks.named<Zip>("distZip") { // <<< ИСПРАВЛЕНО: используем правильный тип Zip
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 tasks.named<Tar>("distTar") {

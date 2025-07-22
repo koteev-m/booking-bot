@@ -1,8 +1,11 @@
 package com.bookingbot.api.model.booking
 
-// Модель для представления стола
+import java.math.BigDecimal
+
 data class Table(
     val id: Int,
+    val clubId: Int,
     val number: Int,
-    val capacity: Int
+    val capacity: Int,
+    val minDeposit: BigDecimal
 )

@@ -33,7 +33,12 @@ object Menus {
     }
 
     fun adminMenu(): InlineKeyboardMarkup {
-        // ...
-        return guestMenu() // Заглушка
+        return InlineKeyboardMarkup.create(
+            listOf(
+                listOf(InlineKeyboardButton.CallbackData(text = "Управление бронями", callbackData = "admin_manage_bookings")),
+                listOf(InlineKeyboardButton.CallbackData(text = "Управление столами", callbackData = "admin_manage_tables")),
+                listOf(InlineKeyboardButton.CallbackData(text = "Создать рассылку", callbackData = "admin_create_broadcast"))
+            )
+        )
     }
 }

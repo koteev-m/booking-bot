@@ -20,5 +20,10 @@ sealed class State(val key: String) {
     // Состояния для админа
     object AdminBookingGuestName : State("admin_booking_guest_name")
     object AdminBookingSource : State("admin_booking_source")
+
+    // Состояния для управления столами
+    object AdminSelectTableToEdit : State("admin_select_table_to_edit")
+    object AdminEditingTableCapacity : State("admin_editing_table_capacity")
+    object AdminEditingTableDeposit : State("admin_editing_table_deposit")
 }
 

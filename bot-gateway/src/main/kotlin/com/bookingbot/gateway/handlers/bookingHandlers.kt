@@ -4,6 +4,7 @@ import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
+import com.bookingbot.gateway.Bot
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.markup.CalendarKeyboard
@@ -32,14 +33,8 @@ fun addBookingHandlers(
     dispatcher.callbackQuery("select_club") {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val clubs = clubService.getAllClubs()
-        val clubButtons = clubs
-            .map { InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}") }
-            .chunked(2)
-        bot.sendMessage(
-            chatId,
-            text = "Выберите клуб:",
-            replyMarkup = InlineKeyboardMarkup.create(clubButtons)
-        )
+        val clubButtons = clubs.map { InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}") }.chunked(2)
+        bot.sendMessage(chatId, text = "Выберите клуб:", replyMarkup = InlineKeyboardMarkup.create(clubButtons))
     }
 
     // Единый обработчик для всех callback'ов, связанных с бронированием
@@ -78,11 +73,11 @@ fun addBookingHandlers(
                 val parts = data.split("_")
                 val direction = parts[1]
                 val yearMonth = java.time.YearMonth.parse(parts[2])
-                val newYM = if (direction == "prev") yearMonth.minusMonths(1) else yearMonth.plusMonths(1)
+                val newYearMonth = if (direction == "prev") yearMonth.minusMonths(1) else yearMonth.plusMonths(1)
                 bot.editMessageReplyMarkup(
                     chatId = chatId,
                     messageId = callbackQuery.message!!.messageId,
-                    replyMarkup = CalendarKeyboard.create(newYM.year, newYM.monthValue)
+                    replyMarkup = CalendarKeyboard.create(newYearMonth.year, newYearMonth.monthValue)
                 )
             }
 
@@ -90,8 +85,7 @@ fun addBookingHandlers(
             data.startsWith("calendar_day_") -> {
                 if (StateStorage.getState(chatId.id) != State.DateSelection.key) return@callbackQuery
                 val date = LocalDate.parse(data.removePrefix("calendar_day_"))
-                StateStorage.getContext(chatId.id).bookingDate =
-                    date.atStartOfDay(ZoneId.systemDefault()).toInstant()
+                StateStorage.getContext(chatId.id).bookingDate = date.atStartOfDay(ZoneId.systemDefault()).toInstant()
                 StateStorage.setState(chatId.id, State.GuestCountInput)
                 bot.deleteMessage(chatId, callbackQuery.message!!.messageId)
                 bot.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
@@ -101,19 +95,19 @@ fun addBookingHandlers(
             data.startsWith("table_") -> {
                 if (StateStorage.getState(chatId.id) != State.TableSelection.key) return@callbackQuery
                 val tableId = data.removePrefix("table_").toInt()
-                val ctx = StateStorage.getContext(chatId.id)
-                ctx.tableId = tableId
+                val context = StateStorage.getContext(chatId.id)
+                context.tableId = tableId
 
-                val club = clubService.findClubById(ctx.clubId!!)
-                val fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault())
-                val text = """
+                val club = clubService.findClubById(context.clubId!!)
+                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault())
+                val confirmationText = """
                     Пожалуйста, подтвердите вашу бронь:
                     - *Клуб:* ${club?.name ?: "Неизвестно"}
-                    - *Стол ID:* ${ctx.tableId}
-                    - *Гостей:* ${ctx.guestCount}
-                    - *Дата:* ${fmt.format(ctx.bookingDate!!)}
+                    - *Стол ID:* ${context.tableId}
+                    - *Гостей:* ${context.guestCount}
+                    - *Дата:* ${formatter.format(context.bookingDate!!)}
                 """.trimIndent()
-                val buttons = InlineKeyboardMarkup.create(
+                val confirmationButtons = InlineKeyboardMarkup.create(
                     listOf(
                         InlineKeyboardButton.CallbackData("✅ Подтвердить", "confirm_booking"),
                         InlineKeyboardButton.CallbackData("❌ Отмена", "cancel_booking_fsm")
@@ -123,116 +117,131 @@ fun addBookingHandlers(
                 bot.editMessageText(
                     chatId = chatId,
                     messageId = callbackQuery.message!!.messageId,
-                    text = text,
-                    replyMarkup = buttons,
+                    text = confirmationText,
+                    replyMarkup = confirmationButtons,
                     parseMode = ParseMode.MARKDOWN
                 )
             }
 
-            // Шаг 7: Финальное подтверждение и уведомление администратору
+            // Шаг 7: Финальное подтверждение
             data == "confirm_booking" -> {
                 if (StateStorage.getState(chatId.id) != State.Confirmation.key) return@callbackQuery
-                val ctx = StateStorage.getContext(chatId.id)
+                val context = StateStorage.getContext(chatId.id)
                 val request = BookingRequest(
                     userId = chatId.id,
-                    clubId = ctx.clubId!!,
-                    tableId = ctx.tableId!!,
-                    bookingTime = ctx.bookingDate!!,
-                    partySize = ctx.guestCount!!,
-                    bookingGuestName = ctx.bookingGuestName,
-                    promoterId = ctx.promoterId,
-                    source = ctx.source ?: "Бот",
-                    phone = ctx.phone,
+                    clubId = context.clubId!!,
+                    tableId = context.tableId!!,
+                    bookingTime = context.bookingDate!!,
+                    partySize = context.guestCount!!,
+                    bookingGuestName = context.bookingGuestName ?: callbackQuery.from.username,
+                    promoterId = context.promoterId,
+                    source = context.source ?: "Бот",
+                    phone = context.phone,
                     telegramId = chatId.id
                 )
                 val booking = bookingService.createBooking(request)
+                bot.editMessageText(chatId, callbackQuery.message!!.messageId, text = "Отлично! Ваша бронь №${booking.id} подтверждена.")
 
-                // 1) Отвечаем пользователю
-                bot.editMessageText(
-                    chatId = chatId,
-                    messageId = callbackQuery.message!!.messageId,
-                    text = "Отлично! Ваша бронь №${booking.id} подтверждена."
-                )
+                val club = clubService.findClubById(context.clubId!!)
+                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault())
 
-                // 2) Уведомляем администратора клуба
-                val club = clubService.findClubById(ctx.clubId!!)
+                // 1. Уведомление для менеджеров КОНКРЕТНОГО клуба
                 club?.adminChannelId?.let { channelId ->
-                    val fmtDateTime = DateTimeFormatter
-                        .ofPattern("dd.MM.yyyy HH:mm")
-                        .withZone(ZoneId.systemDefault())
-                    val notifyText = """
+                    val notificationText = """
                         🔔 *Новая бронь!*
-
+                        *Клуб:* ${club.name}
                         *ID брони:* ${booking.id}
                         *Гость:* @${booking.bookingGuestName ?: "N/A"}
                         *Кол-во человек:* ${booking.partySize}
                         *Стол ID:* ${booking.tableId}
-                        *Время:* ${fmtDateTime.format(booking.bookingTime)}
+                        *Время:* ${formatter.format(booking.bookingTime)}
                     """.trimIndent()
-                    val adminButtons = InlineKeyboardMarkup.create(
+
+                    val adminKeyboard = InlineKeyboardMarkup.create(
                         listOf(
                             InlineKeyboardButton.CallbackData("✅ Гости пришли", "admin_confirm_${booking.id}"),
-                            InlineKeyboardButton.CallbackData("❌ Неявка", "admin_noshow_${booking.id}")
+                            InlineKeyboardButton.CallbackData("❌ Неявка", "admin_noshow_${booking.id}"),
+                            InlineKeyboardButton.CallbackData("🚫 Отменить (Менеджер)", "admin_cancel_${booking.id}")
                         )
                     )
+
                     bot.sendMessage(
                         chatId = ChatId.fromId(channelId),
-                        text = notifyText,
+                        text = notificationText,
                         parseMode = ParseMode.MARKDOWN,
-                        replyMarkup = adminButtons
+                        replyMarkup = adminKeyboard
                     )
                 }
+
+                // 2. Уведомление для УПРАВЛЯЮЩИХ (в общий канал)
+                val generalNotificationText = """
+                    🌐 *Новая бронь (Общая сводка)*
+                    
+                    *Клуб:* ${club?.name ?: "Неизвестно"}
+                    *ID брони:* ${booking.id}
+                    *Источник:* ${booking.source}
+                    *Гость:* @${booking.bookingGuestName ?: "N/A"}
+                    *Кол-во человек:* ${booking.partySize}
+                    *Стол ID:* ${booking.tableId}
+                    *Время:* ${formatter.format(booking.bookingTime)}
+                """.trimIndent()
+
+                bot.sendMessage(
+                    chatId = ChatId.fromId(Bot.GENERAL_ADMIN_CHANNEL_ID),
+                    text = generalNotificationText,
+                    parseMode = ParseMode.MARKDOWN
+                )
 
                 StateStorage.clear(chatId.id)
             }
 
             // Отмена в процессе FSM
             data == "cancel_booking_fsm" -> {
-                bot.editMessageText(
-                    chatId = ChatId.fromId(callbackQuery.message!!.chat.id),
-                    messageId = callbackQuery.message!!.messageId,
-                    text = "Бронирование отменено."
-                )
+                bot.editMessageText(chatId, callbackQuery.message!!.messageId, text = "Бронирование отменено.")
                 StateStorage.clear(chatId.id)
             }
         }
     }
 
-    // Шаг 5: Пользователь ввёл количество гостей
+    // Шаг 5: Пользователь ввел количество гостей, просим телефон
     dispatcher.message(Filter.Text and StateFilter(State.GuestCountInput.key)) {
         val chatId = ChatId.fromId(message.chat.id)
-        val count = message.text?.toIntOrNull()
-        if (count == null || count <= 0) {
+        val guestCount = message.text?.toIntOrNull()
+        if (guestCount == null || guestCount <= 0) {
             bot.sendMessage(chatId, text = "Пожалуйста, введите корректное число гостей.")
             return@message
         }
-        StateStorage.getContext(chatId.id).guestCount = count
+        val context = StateStorage.getContext(chatId.id)
+        context.guestCount = guestCount
+
         StateStorage.setState(chatId.id, State.ContactInput)
-        bot.sendMessage(chatId, text = "Отлично. Теперь введите, пожалуйста, ваш номер телефона:")
+        bot.sendMessage(chatId, text = "Отлично. Теперь, пожалуйста, введите ваш контактный номер телефона:")
     }
 
-    // Шаг 6: Пользователь ввёл телефон
+    // Шаг 6: Пользователь ввел телефон, показываем столы
     dispatcher.message(Filter.Text and StateFilter(State.ContactInput.key)) {
         val chatId = ChatId.fromId(message.chat.id)
         val phone = message.text
+
+        // Простая валидация номера телефона
         val phoneRegex = """^\+?\d{10,14}$""".toRegex()
         if (phone == null || !phone.matches(phoneRegex)) {
-            bot.sendMessage(chatId, text = "Неверный формат. Введите номер, например: +79991234567")
+            bot.sendMessage(chatId, text = "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
             return@message
         }
-        val ctx = StateStorage.getContext(chatId.id)
-        ctx.phone = phone
 
-        val available = tableService.getAvailableTables(ctx.clubId!!, ctx.bookingDate!!, ctx.guestCount!!)
-        if (available.isEmpty()) {
-            bot.sendMessage(chatId, text = "Нет свободных столов для указанного кол-ва гостей.")
+        val context = StateStorage.getContext(chatId.id)
+        context.phone = phone
+
+        val tables = tableService.getAvailableTables(context.clubId!!, context.bookingDate!!, context.guestCount!!)
+        if (tables.isEmpty()) {
+            bot.sendMessage(chatId, "К сожалению, нет свободных столов на указанное количество гостей.")
             StateStorage.clear(chatId.id)
             return@message
         }
-        val buttons = available
-            .map { InlineKeyboardButton.CallbackData("Стол №${it.number} (до ${it.capacity} чел.)", "table_${it.id}") }
-            .chunked(2)
+
+        val tableButtons = tables.map { InlineKeyboardButton.CallbackData("Стол №${it.number} (до ${it.capacity} чел.)", "table_${it.id}") }.chunked(2)
         StateStorage.setState(chatId.id, State.TableSelection)
-        bot.sendMessage(chatId, text = "Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(buttons))
+        bot.sendMessage(chatId, text = "Спасибо! Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
     }
 }

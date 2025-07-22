@@ -1,6 +1,7 @@
 package com.bookingbot.gateway.handlers
 
 import com.bookingbot.api.services.BookingService
+import com.bookingbot.api.services.ClubService
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
@@ -10,7 +11,8 @@ import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService) {
+fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService, clubService: ClubService) {
+    // Обработчик для кнопки "Мои бронирования"
     dispatcher.callbackQuery("my_bookings") {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val bookings = bookingService.findBookingsByUserId(chatId.id)
@@ -23,16 +25,18 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService)
         val formatter = DateTimeFormatter.ofPattern("dd\\.MM\\.yyyy HH:mm").withZone(ZoneId.systemDefault())
 
         bookings.forEach { booking ->
+            val club = clubService.findClubById(booking.clubId)
+            val clubName = club?.name ?: "Неизвестный клуб"
+
             val bookingInfo = """
                 *Бронь №${booking.id}*
-                Клуб ID: ${booking.clubId}
-                Стол ID: ${booking.tableId}
-                Дата: ${formatter.format(booking.bookingTime)}
-                Гостей: ${booking.partySize}
-                Статус: `${booking.status}`
+                *Клуб:* ${clubName.escapeMarkdownV2()}
+                *Стол ID:* ${booking.tableId}
+                *Дата:* ${formatter.format(booking.bookingTime)}
+                *Гостей:* ${booking.partySize}
+                *Статус:* `${booking.status}`
             """.trimIndent()
 
-            // Не показываем кнопки для уже отмененных броней
             val bookingMenu = if (booking.status != "CANCELLED") {
                 InlineKeyboardMarkup.create(
                     listOf(
@@ -53,6 +57,7 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService)
         }
     }
 
+    // Обработчик для кнопок "Изменить" и "Отменить"
     dispatcher.callbackQuery {
         val data = callbackQuery.data
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
@@ -73,17 +78,18 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService)
 
                 if (success) {
                     bot.answerCallbackQuery(callbackQuery.id, text = "Бронь №$bookingId отменена.")
-                    // Обновляем исходное сообщение, чтобы убрать кнопки и показать новый статус
                     val updatedBooking = bookingService.findBookingById(bookingId)
                     if (updatedBooking != null) {
+                        val club = clubService.findClubById(updatedBooking.clubId)
+                        val clubName = club?.name ?: "Неизвестный клуб"
                         val formatter = DateTimeFormatter.ofPattern("dd\\.MM\\.yyyy HH:mm").withZone(ZoneId.systemDefault())
                         val updatedText = """
                             *Бронь №${updatedBooking.id}*
-                            Клуб ID: ${updatedBooking.clubId}
-                            Стол ID: ${updatedBooking.tableId}
-                            Дата: ${formatter.format(updatedBooking.bookingTime)}
-                            Гостей: ${updatedBooking.partySize}
-                            Статус: `${updatedBooking.status}`
+                            *Клуб:* ${clubName.escapeMarkdownV2()}
+                            *Стол ID:* ${updatedBooking.tableId}
+                            *Дата:* ${formatter.format(updatedBooking.bookingTime)}
+                            *Гостей:* ${updatedBooking.partySize}
+                            *Статус:* `${updatedBooking.status}`
                         """.trimIndent()
 
                         bot.editMessageText(
@@ -95,10 +101,14 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService)
                         )
                     }
                 } else {
-                    bot.answerCallbackQuery(callbackQuery.id, text = "Не удалось отменить бронь.", showAlert = true)
+                    bot.answerCallbackQuery(callbackQuery.id, text = "Не удалось отменить бронь. Возможно, она вам не принадлежит.", showAlert = true)
                 }
             }
         }
     }
 }
 
+// Вспомогательная функция для экранирования символов в MarkdownV2
+fun String.escapeMarkdownV2(): String {
+    return this.replace(Regex("[_\\*\\[\\]()~`>#\\+\\-=|{}.!]")) { "\\${it.value}" }
+}

@@ -63,10 +63,30 @@ class BookingService {
         } > 0
     }
 
+    /**
+     * Отменяет бронирование от имени персонала (админа/владельца), не проверяя ID пользователя.
+     * @return true, если бронь была успешно найдена и отменена, иначе false.
+     */
+    fun cancelBookingByStaff(bookingId: Int): Boolean = transaction {
+        BookingsTable.update({ BookingsTable.id eq bookingId }) {
+            it[status] = "CANCELLED"
+        } > 0
+    }
+
     fun updateBookingStatus(bookingId: Int, newStatus: String): Boolean = transaction {
         BookingsTable.update({ BookingsTable.id eq bookingId }) {
             it[status] = newStatus
         } > 0
+    }
+
+    /**
+     * Находит все активные бронирования для конкретного клуба.
+     */
+    fun findActiveBookingsByClub(clubId: Int): List<Booking> = transaction {
+        BookingsTable
+            .select { (BookingsTable.clubId eq clubId) and (BookingsTable.status inList listOf("PENDING", "SEATED")) }
+            .orderBy(BookingsTable.bookingTime, SortOrder.ASC)
+            .map { it.toBooking() }
     }
 
     /**

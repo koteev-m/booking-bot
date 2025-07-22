@@ -1,14 +1,60 @@
+# Версия синтаксиса docker-compose
+version: '3.8'
+
+# Определение сервисов (контейнеров)
 services:
+  # Сервис базы данных PostgreSQL
+  db:
+    image: postgres:15-alpine  # Используем официальный и легковесный образ PostgreSQL 15
+    container_name: booking_bot_db
+    restart: always # Всегда перезапускать контейнер, если он остановился
+    environment:
+      # Переменные окружения для создания базы данных и пользователя
+      # Эти значения будут использоваться сервисом bot-gateway для подключения
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_db
+    ports:
+      # Пробрасываем порт 5432 из контейнера на хост-машину
+      # Это полезно для подключения к БД напрямую с вашего компьютера (например, через DBeaver)
+      - "5432:5432"
+    volumes:
+      # Создаем именованный том для хранения данных БД, чтобы они не терялись при перезапуске контейнера
+      - postgres_data:/var/lib/postgresql/data
+
+  # Сервис вашего Telegram-бота
   bot-gateway:
     build:
-      context: ./bot-gateway
-      dockerfile: Dockerfile
-    image: booking-bot:latest
-    secrets:
-      - telegram_bot_token
+      context: ./bot-gateway # Указываем путь к Dockerfile для сборки образа
+    container_name: booking_bot_app
+    restart: always
+    depends_on:
+      - db # Запускать этот сервис только после успешного запуска сервиса 'db'
     ports:
+      # Пробрасываем порт 8080 для Ktor-сервера
       - "8080:8080"
+    environment:
+      # Переменные окружения для подключения к базе данных
+      # Они должны совпадать с теми, что указаны в сервисе 'db'
+      DB_URL: jdbc:postgresql://db:5432/booking_db
+      DB_USER: booking_user
+      DB_PASS: booking_password
+    secrets:
+      # Подключаем секреты, которые будут доступны внутри контейнера
+      - telegram_bot_mix_token
+      - owner_id
+      - general_admin_channel_id
 
+# Определение томов для хранения данных
+volumes:
+  postgres_data:
+    driver: local # Используем локальный драйвер для хранения данных на хост-машине
+
+# Определение секретов
 secrets:
-  telegram_bot_token:
-    file: ./secrets/telegram_bot_token.txt
+  telegram_bot_mix_token:
+    file: ./secrets/telegram_bot_mix_token.txt # Путь к файлу с токеном бота
+  owner_id:
+    file: ./secrets/owner_id.txt # Путь к файлу с ID владельцев
+  general_admin_channel_id:
+    file: ./secrets/general_admin_channel_id.txt # Путь к файлу с ID общего канала

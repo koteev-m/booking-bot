@@ -16,6 +16,8 @@ import com.bookingbot.gateway.handlers.addPromoterHandlers
 import com.bookingbot.gateway.handlers.addStartHandler
 import com.bookingbot.gateway.handlers.addOwnerHandlers
 import com.bookingbot.gateway.handlers.addAdminDashboardHandler
+import com.bookingbot.gateway.handlers.addPromoterDashboardHandler
+import com.bookingbot.api.services.EventService
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +82,7 @@ object Bot {
     private val clubService = ClubService()
     private val tableService = TableService()
     private val bookingService = BookingService()
+    private val eventService = EventService()
 
     // --- Создание экземпляра бота ---
     val instance = bot {
@@ -88,16 +91,17 @@ object Bot {
         dispatch {
             addStartHandler(this, userService)
             addBookingHandlers(this, clubService, tableService, bookingService)
-            addMyBookingsHandler(this, bookingService, clubService) // <<< ИЗМЕНЕНО
-            addClubInfoHandler(this, clubService)
+            addMyBookingsHandler(this, bookingService, clubService)
+            addClubInfoHandler(this, clubService, tableService, eventService)
             addAskQuestionHandler(this, clubService)
             addAdminHandlers(this, userService, clubService)
             addPromoterHandlers(this, userService, clubService)
             addAdminActionHandler(this, bookingService, clubService)
             addContentHandlers(this)
             addAdminTableManagementHandler(this, tableService)
-            addOwnerHandlers(this, clubService, tableService)
+            addOwnerHandlers(this, clubService, tableService, eventService)
             addAdminDashboardHandler(this, userService, bookingService)
+            addPromoterDashboardHandler(this, bookingService, clubService)
         }
     }
 }

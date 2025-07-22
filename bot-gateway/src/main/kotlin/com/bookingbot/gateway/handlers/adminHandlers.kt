@@ -3,15 +3,22 @@ package com.bookingbot.gateway.handlers
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.UserService
-import com.bookingbot.gateway.Bot.OWNER_IDS // Импортируем список ID владельцев
+import com.bookingbot.gateway.Bot
+import com.bookingbot.gateway.fsm.State
+import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.util.StateFilter
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.command
+import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
+import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.github.kotlintelegrambot.extensions.filters.Filter
 
 fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubService: ClubService) {
 
-    // Команда для ответа пользователю
+    // Команда для ответа пользователю на вопрос
     dispatcher.command("answer") {
         val adminId = message.from?.id ?: return@command
         val admin = userService.findOrCreateUser(adminId, null)
@@ -22,7 +29,6 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             return@command
         }
 
-        // Парсим аргументы: /answer <userId> <текст ответа>
         val commandParts = message.text?.split(" ") ?: return@command
         if (commandParts.size < 3) {
             bot.sendMessage(
@@ -41,7 +47,6 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         val answerText = commandParts.drop(2).joinToString(" ")
 
-        // Отправляем ответ пользователю
         val result = bot.sendMessage(
             chatId = ChatId.fromId(targetUserId),
             text = "💬 *Ответ от администрации:*\n\n$answerText",
@@ -59,8 +64,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
     dispatcher.command("setrole") {
         val requesterId = message.from?.id ?: return@command
 
-        // Проверяем, что команду использует один из владельцев
-        if (requesterId !in OWNER_IDS) {
+        if (requesterId !in Bot.OWNER_IDS) {
             bot.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
             return@command
         }
@@ -69,7 +73,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         if (commandParts.size != 3) {
             bot.sendMessage(
                 ChatId.fromId(requesterId),
-                "Неверный формат. Используйте: `/setrole <ID пользователя> <ROLE>`\nДоступные роли: GUEST, PROMOTER, ADMIN",
+                "Неверный формат. Используйте: `/setrole <ID пользователя> <ROLE>`\nДоступные роли: GUEST, PROMOTER, ADMIN, OWNER",
                 parseMode = ParseMode.MARKDOWN
             )
             return@command
@@ -86,13 +90,12 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val newRole = try {
             UserRole.valueOf(roleName)
         } catch (e: IllegalArgumentException) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN.")
+            bot.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN, OWNER.")
             return@command
         }
 
         if (userService.updateUserRole(targetUserId, newRole)) {
             bot.sendMessage(ChatId.fromId(requesterId), "✅ Роль для пользователя $targetUserId успешно изменена на $newRole.")
-            // Уведомляем пользователя об изменении его роли
             bot.sendMessage(ChatId.fromId(targetUserId), "Вам была назначена новая роль: *$newRole*", parseMode = ParseMode.MARKDOWN)
         } else {
             bot.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось найти пользователя с ID $targetUserId.")
@@ -103,7 +106,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
     dispatcher.command("addstaff") {
         val requesterId = message.from?.id ?: return@command
 
-        if (requesterId !in OWNER_IDS) {
+        if (requesterId !in Bot.OWNER_IDS) {
             bot.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
             return@command
         }
@@ -127,22 +130,18 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             return@command
         }
 
-        val role = try {
-            UserRole.valueOf(roleName)
-        } catch (e: Exception) { null }
+        val role = try { UserRole.valueOf(roleName) } catch (e: Exception) { null }
 
         if (role != UserRole.ADMIN && role != UserRole.PROMOTER) {
             bot.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: ADMIN, PROMOTER.")
             return@command
         }
 
-        // Проверяем, существует ли клуб
         if (clubService.findClubById(targetClubId) == null) {
             bot.sendMessage(ChatId.fromId(requesterId), "Клуб с ID $targetClubId не найден.")
             return@command
         }
 
-        // Убеждаемся, что пользователь существует в нашей БД
         userService.findOrCreateUser(targetUserId, null)
 
         if (userService.assignUserToClub(targetUserId, targetClubId, role)) {
@@ -151,5 +150,65 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         } else {
             bot.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось назначить пользователя.")
         }
+    }
+
+    // Команда для создания брони вручную
+    dispatcher.command("createbooking") {
+        val adminId = message.from?.id ?: return@command
+        val admin = userService.findOrCreateUser(adminId, null)
+
+        if (admin.role != UserRole.ADMIN && admin.role != UserRole.OWNER) {
+            bot.sendMessage(ChatId.fromId(adminId), "У вас нет прав для использования этой команды.")
+            return@command
+        }
+
+        StateStorage.setState(adminId, State.AdminBookingGuestName)
+        bot.sendMessage(ChatId.fromId(adminId), "Начинаем создание брони. Введите имя гостя:")
+    }
+
+    // Админ вводит имя гостя
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingGuestName.key)) {
+        val adminId = message.from?.id ?: return@message
+        val guestName = message.text ?: return@message
+
+        StateStorage.getContext(adminId).bookingGuestName = guestName
+        StateStorage.setState(adminId, State.AdminBookingSource)
+        bot.sendMessage(ChatId.fromId(adminId), "Имя гостя '$guestName' принято. Теперь введите источник брони (например, 'Звонок', 'Instagram'):")
+    }
+
+    // Админ вводит источник брони
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingSource.key)) {
+        val adminId = message.from?.id ?: return@message
+        val source = message.text ?: return@message
+
+        StateStorage.getContext(adminId).source = source
+        StateStorage.setState(adminId, State.AdminBookingPhone)
+        bot.sendMessage(ChatId.fromId(adminId), "Источник '$source' принят. Теперь введите номер телефона гостя:")
+    }
+
+    // Админ вводит номер телефона гостя и переходит к выбору клуба
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingPhone.key)) {
+        val adminId = message.from?.id ?: return@message
+        val phone = message.text
+
+        val phoneRegex = """^\+?\d{10,14}$""".toRegex()
+        if (phone == null || !phone.matches(phoneRegex)) {
+            bot.sendMessage(ChatId.fromId(adminId), "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
+            return@message
+        }
+
+        StateStorage.getContext(adminId).phone = phone
+
+        val clubs = clubService.getAllClubs()
+        val clubButtons = clubs.map {
+            InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}")
+        }.chunked(2)
+
+        bot.sendMessage(
+            chatId = ChatId.fromId(adminId),
+            text = "Телефон '$phone' принят. Теперь выберите клуб для бронирования:",
+            replyMarkup = InlineKeyboardMarkup.create(clubButtons)
+        )
+        StateStorage.setState(adminId, State.ClubSelection)
     }
 }

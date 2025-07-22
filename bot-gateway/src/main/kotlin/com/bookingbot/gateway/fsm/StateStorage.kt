@@ -2,12 +2,12 @@ package com.bookingbot.gateway.fsm
 
 import java.util.concurrent.ConcurrentHashMap
 
-// Заменит простую userStates map. Потокобезопасное хранилище.
+// Потокобезопасное хранилище для состояний и контекста пользователей
 object StateStorage {
     private val userStates = ConcurrentHashMap<Long, String>()
     private val userContexts = ConcurrentHashMap<Long, BookingContext>()
 
-    fun setState(userId: Long, state: BookingState) {
+    fun setState(userId: Long, state: State) { // <<< Убедитесь, что здесь используется тип State
         userStates[userId] = state.key
     }
 

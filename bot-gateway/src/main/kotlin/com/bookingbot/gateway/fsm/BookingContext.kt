@@ -9,7 +9,7 @@ data class BookingContext(
     var guestCount: Int? = null,
     var phone: String? = null,
     var bookingGuestName: String? = null,
-    var promoterId: Long? = null, // <<< Убедитесь, что это поле есть
+    var promoterId: Long? = null,
     var source: String? = null,
     var editingTableId: Int? = null
 )

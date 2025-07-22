@@ -91,7 +91,7 @@ fun addBookingHandlers(
                 bot.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
             }
 
-            // Шаг 6: Выбор стола
+            // Шаг 6: Пользователь выбрал стол, показываем подтверждение
             data.startsWith("table_") -> {
                 if (StateStorage.getState(chatId.id) != State.TableSelection.key) return@callbackQuery
                 val tableId = data.removePrefix("table_").toInt()
@@ -100,13 +100,26 @@ fun addBookingHandlers(
 
                 val club = clubService.findClubById(context.clubId!!)
                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault())
+
+                // <<< НАЧАЛО: Улучшаем текст подтверждения для персонала
+                var staffInfo = ""
+                if (context.source != null && context.source != "Бот") {
+                    staffInfo = """
+                        - *Имя гостя:* ${context.bookingGuestName ?: "Не указано"}
+                        - *Телефон:* ${context.phone ?: "Не указан"}
+                    """.trimIndent()
+                }
+                // <<< КОНЕЦ: Улучшаем текст подтверждения для персонала
+
                 val confirmationText = """
                     Пожалуйста, подтвердите вашу бронь:
                     - *Клуб:* ${club?.name ?: "Неизвестно"}
                     - *Стол ID:* ${context.tableId}
                     - *Гостей:* ${context.guestCount}
                     - *Дата:* ${formatter.format(context.bookingDate!!)}
+                    $staffInfo
                 """.trimIndent()
+
                 val confirmationButtons = InlineKeyboardMarkup.create(
                     listOf(
                         InlineKeyboardButton.CallbackData("✅ Подтвердить", "confirm_booking"),

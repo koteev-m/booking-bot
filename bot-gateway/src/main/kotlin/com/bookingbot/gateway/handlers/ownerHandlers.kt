@@ -7,8 +7,12 @@ import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.ParseMode
+import com.bookingbot.api.services.EventService
+import com.bookingbot.gateway.Bot
+import java.time.LocalDate
+import java.time.ZoneId
 
-fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableService: TableService) {
+fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableService: TableService, eventService: EventService) {
 
     // Команда для создания нового клуба
     dispatcher.command("addclub") {
@@ -68,4 +72,28 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
         val newTable = tableService.createTable(clubId, tableNumber, capacity, deposit)
         bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Стол №${newTable.number} добавлен в клуб $clubId.")
     }
+
+    // Команда для добавления нового события/афиши
+    dispatcher.command("addevent") {
+        if (message.from?.id !in Bot.OWNER_IDS) return@command
+
+        // Формат: /addevent <ID клуба> <ДД.ММ.ГГГГ> <Заголовок>
+        if (args.size < 3) {
+            bot.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/addevent <ID клуба> <ДД.ММ.ГГГГ> <Заголовок>`", parseMode = ParseMode.MARKDOWN)
+            return@command
+        }
+        val clubId = args[0].toIntOrNull()
+        val date = try { LocalDate.parse(args[1], java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) } catch (e: Exception) { null }
+        val title = args.drop(2).joinToString(" ")
+
+        if (clubId == null || date == null || title.isBlank()) {
+            bot.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат данных.")
+            return@command
+        }
+
+        // Опционально: можно добавить запрос на описание и картинку в FSM
+        eventService.createEvent(clubId, title, "Описание скоро будет...", date.atStartOfDay(ZoneId.systemDefault()).toInstant(), null)
+        bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Новое событие '$title' добавлено для клуба $clubId.")
+    }
 }
+

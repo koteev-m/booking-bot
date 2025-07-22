@@ -2,6 +2,7 @@ package com.bookingbot.gateway.handlers
 
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
+import com.bookingbot.gateway.util.escapeMarkdownV2
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
@@ -106,9 +107,4 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService,
             }
         }
     }
-}
-
-// Вспомогательная функция для экранирования символов в MarkdownV2
-fun String.escapeMarkdownV2(): String {
-    return this.replace(Regex("[_\\*\\[\\]()~`>#\\+\\-=|{}.!]")) { "\\${it.value}" }
 }

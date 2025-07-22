@@ -73,6 +73,16 @@ class BookingService {
         } > 0
     }
 
+    /**
+     * Находит все бронирования, созданные конкретным промоутером.
+     */
+    fun findBookingsByPromoterId(promoterId: Long): List<Booking> = transaction {
+        BookingsTable
+            .select { BookingsTable.promoterId eq promoterId }
+            .orderBy(BookingsTable.bookingTime, SortOrder.DESC)
+            .map { it.toBooking() }
+    }
+
     fun updateBookingStatus(bookingId: Int, newStatus: String): Boolean = transaction {
         BookingsTable.update({ BookingsTable.id eq bookingId }) {
             it[status] = newStatus

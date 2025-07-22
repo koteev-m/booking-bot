@@ -1,9 +1,8 @@
 package com.bookingbot.gateway
 
-import com.bookingbot.api.BookingRequest
-import com.bookingbot.api.Booking
+import com.bookingbot.api.model.booking.`BookingRequest.kt`
+import com.bookingbot.api.model.booking.Booking
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
@@ -12,7 +11,7 @@ import io.ktor.http.*
 import java.time.Instant
 import kotlin.test.*
 
-class BookingApiIntegrationTest {
+class {
 
     @Test
     fun `full CRUD lifecycle via HTTP`() = testApplication {
@@ -27,7 +26,7 @@ class BookingApiIntegrationTest {
         }
 
         // 1) Create
-        val createReq = BookingRequest(
+        val createReq = `BookingRequest.kt`(
             userId = 42,
             clubId = 1,
             tableId = 99,
@@ -57,7 +56,7 @@ class BookingApiIntegrationTest {
         assertTrue(all.contains(created))
 
         // 4) Update
-        val updateReq = BookingRequest(
+        val updateReq = `BookingRequest.kt`(
             userId = 7,
             clubId = 2,
             tableId = 8,

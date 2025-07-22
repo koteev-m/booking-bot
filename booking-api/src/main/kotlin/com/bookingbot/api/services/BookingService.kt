@@ -1,0 +1,92 @@
+package com.bookingbot.api.services
+
+import com.bookingbot.api.model.booking.Booking
+import com.bookingbot.api.model.booking.BookingRequest
+import com.bookingbot.api.tables.BookingsTable
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
+class BookingService {
+
+    /**
+     * Создает новую бронь в базе данных.
+     * @param request Объект с данными для создания брони.
+     * @return Созданный объект Booking.
+     */
+    fun createBooking(request: BookingRequest): Booking = transaction {
+        val id = BookingsTable.insertAndGetId {
+            it[userId] = request.userId
+            it[clubId] = request.clubId
+            it[tableId] = request.tableId
+            it[bookingTime] = request.bookingTime
+            it[partySize] = request.partySize
+            it[expectedDuration] = request.expectedDuration
+            it[bookingGuestName] = request.bookingGuestName
+            it[telegramId] = request.telegramId
+            it[phone] = request.phone
+            it[promoterId] = request.promoterId
+            it[source] = request.source
+        }.value
+        findBookingById(id) ?: throw IllegalStateException("Failed to create or find booking with id $id")
+    }
+
+    /**
+     * Находит все бронирования для конкретного пользователя.
+     * @param requestingUserId ID пользователя в Telegram.
+     * @return Список объектов Booking.
+     */
+    fun findBookingsByUserId(requestingUserId: Long): List<Booking> = transaction {
+        BookingsTable
+            .select { BookingsTable.userId eq requestingUserId }
+            .map { it.toBooking() }
+    }
+
+    /**
+     * Находит бронирование по его уникальному ID.
+     * @param id ID бронирования.
+     * @return Объект Booking или null, если не найден.
+     */
+    fun findBookingById(id: Int): Booking? = transaction {
+        BookingsTable.select { BookingsTable.id eq id }.map { it.toBooking() }.singleOrNull()
+    }
+
+    /**
+     * Отменяет бронирование, изменяя его статус на 'CANCELLED'.
+     * Проверяет, что отменить бронь может только тот пользователь, который ее создал.
+     * @param bookingId ID бронирования для отмены.
+     * @param requestingUserId ID пользователя, который пытается отменить бронь.
+     * @return true, если бронь была успешно найдена и отменена, иначе false.
+     */
+    fun cancelBooking(bookingId: Int, requestingUserId: Long): Boolean = transaction {
+        BookingsTable.update({ (BookingsTable.id eq bookingId) and (BookingsTable.userId eq requestingUserId) }) {
+            it[status] = "CANCELLED"
+        } > 0
+    }
+
+    fun updateBookingStatus(bookingId: Int, newStatus: String): Boolean = transaction {
+        BookingsTable.update({ BookingsTable.id eq bookingId }) {
+            it[status] = newStatus
+        } > 0
+    }
+
+    /**
+     * Приватная функция-расширение для конвертации строки из базы данных в объект Booking.
+     */
+    private fun ResultRow.toBooking(): Booking = Booking(
+        id = this[BookingsTable.id].value,
+        userId = this[BookingsTable.userId],
+        clubId = this[BookingsTable.clubId],
+        tableId = this[BookingsTable.tableId],
+        bookingTime = this[BookingsTable.bookingTime],
+        partySize = this[BookingsTable.partySize],
+        expectedDuration = this[BookingsTable.expectedDuration],
+        bookingGuestName = this[BookingsTable.bookingGuestName],
+        telegramId = this[BookingsTable.telegramId],
+        phone = this[BookingsTable.phone],
+        status = this[BookingsTable.status],
+        createdAt = this[BookingsTable.createdAt],
+        promoterId = this[BookingsTable.promoterId],
+        source = this[BookingsTable.source]
+    )
+}
+

@@ -1,5 +1,6 @@
 package com.bookingbot.api
 
+import com.bookingbot.api.tables.Bookings
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.typesafe.config.ConfigFactory

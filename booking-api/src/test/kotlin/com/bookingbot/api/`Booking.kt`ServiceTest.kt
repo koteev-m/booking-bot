@@ -1,5 +1,7 @@
 package com.bookingbot.api
 
+import com.bookingbot.api.model.booking.`BookingRequest.kt`
+import com.bookingbot.api.services.BookingService
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.test.BeforeTest
@@ -12,7 +14,7 @@ import kotlin.test.assertTrue
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.deleteAll
 
-class BookingServiceTest {
+class {
     private val service = BookingService()
 
     @BeforeTest
@@ -36,7 +38,7 @@ class BookingServiceTest {
     @Test
     fun `create and retrieve booking`() {
         val ts = Instant.now().truncatedTo(ChronoUnit.SECONDS) // Используем фиксированное время
-        val request = BookingRequest(
+        val request = `BookingRequest.kt`(
             userId           = 1,
             clubId           = 42,
             tableId          = 2,
@@ -89,14 +91,14 @@ class BookingServiceTest {
     @Test
     fun `update booking`() {
         val original = service.createBooking(
-            BookingRequest(
+            `BookingRequest.kt`(
                 userId = 1, clubId = 42, tableId = 2,
                 bookingTime = Instant.ofEpochMilli(1_000L),
                 partySize = 4, guestName = "Alice"
             )
         )
 
-        val updatedReq = BookingRequest(
+        val updatedReq = `BookingRequest.kt`(
             userId = 10, clubId = 99, tableId = 3,
             bookingTime = Instant.ofEpochMilli(2_000L),
             partySize = 2, expectedDuration = 120,
@@ -128,7 +130,7 @@ class BookingServiceTest {
     @Test
     fun `delete booking`() {
         val created = service.createBooking(
-            BookingRequest(
+            `BookingRequest.kt`(
                 userId = 1, clubId = 42, tableId = 2,
                 bookingTime = Instant.ofEpochMilli(1_000L),
                 partySize = 4
@@ -151,7 +153,7 @@ class BookingServiceTest {
 
     @Test
     fun `updateBooking for non-existent id returns false`() {
-        val request = BookingRequest(
+        val request = `BookingRequest.kt`(
             userId = 1, clubId = 1, tableId = 1,
             bookingTime = Instant.now(), partySize = 1
         )

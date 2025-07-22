@@ -1,7 +1,7 @@
 package com.bookingbot.gateway
 
-import com.bookingbot.api.BookingRequest
-import com.bookingbot.api.BookingService
+import com.bookingbot.api.model.booking.`BookingRequest.kt`
+import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.DatabaseFactory
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -37,7 +37,7 @@ fun Application.module() {
         val bookingService = BookingService()
         route("/bookings") {
             post {
-                val req = call.receive<BookingRequest>()
+                val req = call.receive<`BookingRequest.kt`>()
                 val created = bookingService.createBooking(req)
                 call.respond(HttpStatusCode.Created, created)
             }
@@ -61,7 +61,7 @@ fun Application.module() {
                     call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
                     return@put
                 }
-                val req = call.receive<BookingRequest>()
+                val req = call.receive<`BookingRequest.kt`>()
                 if (bookingService.updateBooking(id, req)) {
                     bookingService.getBooking(id)?.let { updatedBooking ->
                         call.respond(HttpStatusCode.OK, updatedBooking)

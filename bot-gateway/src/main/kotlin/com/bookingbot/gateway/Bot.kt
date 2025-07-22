@@ -1,12 +1,12 @@
-// bot-gateway/src/main/kotlin/com/bookingbot/gateway/Bot.kt
 package com.bookingbot.gateway
 
+import com.bookingbot.api.services.BookingService
+import com.bookingbot.api.services.ClubService
+import com.bookingbot.api.services.TableService
+import com.bookingbot.api.services.UserService
+import com.bookingbot.gateway.handlers.*
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
-import com.github.kotlintelegrambot.dispatcher.command
-import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.KeyboardReplyMarkup
-import com.github.kotlintelegrambot.entities.keyboard.KeyboardButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,24 +31,25 @@ object Bot {
             ?: throw IllegalStateException("Telegram token not found in secret file or environment variable")
     }
 
+    // Создаем экземпляры всех сервисов
+    private val userService = UserService()
+    private val clubService = ClubService()
+    private val tableService = TableService()
+    private val bookingService = BookingService()
+
     val instance = bot {
         token = readToken()
 
         dispatch {
-            command("start") {
-                val mainMenu = KeyboardReplyMarkup(
-                    keyboard = listOf(
-                        listOf(KeyboardButton("Выбрать клуб"), KeyboardButton("Мои бронирования")),
-                        listOf(KeyboardButton("Задать вопрос"), KeyboardButton("Музыка"))
-                    ),
-                    resizeKeyboard = true
-                )
-                bot.sendMessage(
-                    chatId = ChatId.fromId(message.chat.id),
-                    text = "Добро пожаловать в бот для бронирования столов! 👋\n\nВыберите действие:",
-                    replyMarkup = mainMenu
-                )
-            }
+            // Передаем все необходимые сервисы в обработчики
+            addStartHandler(this, userService)
+            addBookingHandlers(this, clubService, tableService, bookingService)
+            addMyBookingsHandler(this, bookingService)
+            addClubInfoHandler(this, clubService)
+            addAskQuestionHandler(this, clubService)
+            addAdminHandlers(this, userService, clubService)
+            addPromoterHandlers(this, userService, clubService)
+            addAdminActionHandler(this, bookingService)
         }
     }
 }

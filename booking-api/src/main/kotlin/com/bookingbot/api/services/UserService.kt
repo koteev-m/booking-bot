@@ -6,6 +6,7 @@ import com.bookingbot.api.tables.ClubStaffTable
 import com.bookingbot.api.tables.UsersTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
@@ -74,6 +75,10 @@ class UserService {
             .select { ClubStaffTable.userId eq staffId }
             .map { it[ClubStaffTable.clubId] }
             .singleOrNull()
+    }
+
+    fun getAllUserIds(): List<Long> = transaction {
+        UsersTable.selectAll().map { it[UsersTable.telegramId] }
     }
 }
 

@@ -4,20 +4,8 @@ import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.UserService
-import com.bookingbot.gateway.handlers.addAdminActionHandler
-import com.bookingbot.gateway.handlers.addAdminHandlers
-import com.bookingbot.gateway.handlers.addAdminTableManagementHandler
-import com.bookingbot.gateway.handlers.addAskQuestionHandler
-import com.bookingbot.gateway.handlers.addBookingHandlers
-import com.bookingbot.gateway.handlers.addClubInfoHandler
-import com.bookingbot.gateway.handlers.addContentHandlers
-import com.bookingbot.gateway.handlers.addMyBookingsHandler
-import com.bookingbot.gateway.handlers.addPromoterHandlers
-import com.bookingbot.gateway.handlers.addStartHandler
-import com.bookingbot.gateway.handlers.addOwnerHandlers
-import com.bookingbot.gateway.handlers.addAdminDashboardHandler
-import com.bookingbot.gateway.handlers.addPromoterDashboardHandler
 import com.bookingbot.api.services.EventService
+import com.bookingbot.gateway.handlers.*
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import kotlinx.coroutines.CoroutineScope
@@ -87,8 +75,8 @@ object Bot {
     // --- Создание экземпляра бота ---
     val instance = bot {
         token = readToken()
-
         dispatch {
+            addNavigationHandler(this, userService)
             addStartHandler(this, userService)
             addBookingHandlers(this, clubService, tableService, bookingService)
             addMyBookingsHandler(this, bookingService, clubService)
@@ -98,10 +86,11 @@ object Bot {
             addPromoterHandlers(this, userService, clubService)
             addAdminActionHandler(this, bookingService, clubService)
             addContentHandlers(this)
-            addAdminTableManagementHandler(this, tableService)
+            addAdminTableManagementHandler(this, tableService, userService)
             addOwnerHandlers(this, clubService, tableService, eventService)
             addAdminDashboardHandler(this, userService, bookingService)
             addPromoterDashboardHandler(this, bookingService, clubService)
+            addBroadcastHandler(this, userService)
         }
     }
 }

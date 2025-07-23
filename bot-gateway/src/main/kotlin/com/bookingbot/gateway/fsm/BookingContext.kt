@@ -11,5 +11,6 @@ data class BookingContext(
     var bookingGuestName: String? = null,
     var promoterId: Long? = null,
     var source: String? = null,
-    var editingTableId: Int? = null
+    var editingTableId: Int? = null,
+    var broadcastMessageId: Long? = null
 )

@@ -25,6 +25,10 @@ sealed class State(val key: String) {
     object AdminSelectTableToEdit : State("admin_select_table_to_edit")
     object AdminEditingTableCapacity : State("admin_editing_table_capacity")
     object AdminEditingTableDeposit : State("admin_editing_table_deposit")
+
+    // Состояния для рассылки
+    object BroadcastMessageInput : State("broadcast_message_input")
+    object BroadcastConfirmation : State("broadcast_confirmation")
 }
 
 

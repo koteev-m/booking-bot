@@ -1,6 +1,7 @@
 package com.bookingbot.gateway.handlers
 
 import com.bookingbot.api.services.TableService
+import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.util.StateFilter
@@ -12,13 +13,25 @@ import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import com.github.kotlintelegrambot.extensions.filters.Filter
 
-fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableService) {
+fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableService, userService: UserService) {
     // Шаг 1: Админ нажимает "Управление столами"
     dispatcher.callbackQuery("admin_manage_tables") {
         val adminId = callbackQuery.from.id
-        // TODO: Определить clubId для админа
-        val clubId = 1 // Заглушка
+
+        // <<< НАЧАЛО: Проверяем, к какому клубу привязан админ
+        val clubId = userService.getStaffClubId(adminId)
+        if (clubId == null) {
+            bot.answerCallbackQuery(callbackQuery.id, "Вы не привязаны ни к одному клубу. Обратитесь к владельцу.", showAlert = true)
+            return@callbackQuery
+        }
+        // <<< КОНЕЦ: Проверяем, к какому клубу привязан админ
+
         val tables = tableService.getTablesForClub(clubId)
+        if (tables.isEmpty()) {
+            bot.sendMessage(ChatId.fromId(adminId), "В вашем клубе еще не добавлены столы.")
+            return@callbackQuery
+        }
+
         val tableButtons = tables.map {
             InlineKeyboardButton.CallbackData("Стол №${it.number} (вмест: ${it.capacity}, деп: ${it.minDeposit})", "admin_edit_table_${it.id}")
         }.chunked(1)

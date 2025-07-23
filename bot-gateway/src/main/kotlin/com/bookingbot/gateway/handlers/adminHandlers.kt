@@ -199,6 +199,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         StateStorage.getContext(adminId).phone = phone
 
+        // <<< НАЧАЛО: Перенаправляем на стандартный флоу выбора клуба
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map {
             InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}")
@@ -209,6 +210,8 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             text = "Телефон '$phone' принят. Теперь выберите клуб для бронирования:",
             replyMarkup = InlineKeyboardMarkup.create(clubButtons)
         )
+        // Переводим админа в состояние выбора клуба, чтобы FSM гостя подхватил диалог
         StateStorage.setState(adminId, State.ClubSelection)
+        // <<< КОНЕЦ: Перенаправляем на стандартный флоу выбора клуба
     }
 }

@@ -61,10 +61,15 @@ fun addBookingHandlers(
                 StateStorage.getContext(chatId.id).clubId = clubId
                 StateStorage.setState(chatId.id, State.DateSelection)
                 val today = LocalDate.now()
+
+                val calendarMarkup = CalendarKeyboard.create(today.year, today.monthValue)
+                val keyboardWithBack = calendarMarkup.inlineKeyboard.toMutableList().apply {
+                    add(listOf(Menus.backToMainMenuButton))
+                }
                 bot.sendMessage(
                     chatId = chatId,
-                    text = "Выберите дату:",
-                    replyMarkup = CalendarKeyboard.create(today.year, today.monthValue)
+                    text = "Выберите дату (или введите /cancel для отмены):",
+                    replyMarkup = InlineKeyboardMarkup.create(keyboardWithBack)
                 )
             }
 
@@ -74,10 +79,16 @@ fun addBookingHandlers(
                 val direction = parts[1]
                 val yearMonth = java.time.YearMonth.parse(parts[2])
                 val newYearMonth = if (direction == "prev") yearMonth.minusMonths(1) else yearMonth.plusMonths(1)
+
+                val calendarMarkup = CalendarKeyboard.create(newYearMonth.year, newYearMonth.monthValue)
+                val keyboardWithBack = calendarMarkup.inlineKeyboard.toMutableList().apply {
+                    add(listOf(Menus.backToMainMenuButton))
+                }
+
                 bot.editMessageReplyMarkup(
                     chatId = chatId,
                     messageId = callbackQuery.message!!.messageId,
-                    replyMarkup = CalendarKeyboard.create(newYearMonth.year, newYearMonth.monthValue)
+                    replyMarkup = InlineKeyboardMarkup.create(keyboardWithBack)
                 )
             }
 
@@ -91,7 +102,7 @@ fun addBookingHandlers(
                 bot.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
             }
 
-            // Шаг 6: Пользователь выбрал стол, показываем подтверждение
+            // Шаг 6: Выбор стола
             data.startsWith("table_") -> {
                 if (StateStorage.getState(chatId.id) != State.TableSelection.key) return@callbackQuery
                 val tableId = data.removePrefix("table_").toInt()
@@ -101,15 +112,15 @@ fun addBookingHandlers(
                 val club = clubService.findClubById(context.clubId!!)
                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault())
 
-                // <<< НАЧАЛО: Улучшаем текст подтверждения для персонала
-                var staffInfo = ""
-                if (context.source != null && context.source != "Бот") {
-                    staffInfo = """
-                        - *Имя гостя:* ${context.bookingGuestName ?: "Не указано"}
-                        - *Телефон:* ${context.phone ?: "Не указан"}
+                val staffInfo = if (context.source != null && context.source != "Бот") {
+                    """
+                    - *Имя гостя:* ${context.bookingGuestName ?: "Не указано"}
+                    - *Телефон:* ${context.phone ?: "Не указан"}
+                    - *Источник:* ${context.source}
                     """.trimIndent()
+                } else {
+                    ""
                 }
-                // <<< КОНЕЦ: Улучшаем текст подтверждения для персонала
 
                 val confirmationText = """
                     Пожалуйста, подтвердите вашу бронь:
@@ -140,13 +151,20 @@ fun addBookingHandlers(
             data == "confirm_booking" -> {
                 if (StateStorage.getState(chatId.id) != State.Confirmation.key) return@callbackQuery
                 val context = StateStorage.getContext(chatId.id)
+
+                val guestName = if (context.promoterId != null || (context.source != null && context.source != "Бот")) {
+                    context.bookingGuestName
+                } else {
+                    callbackQuery.from.username
+                }
+
                 val request = BookingRequest(
                     userId = chatId.id,
                     clubId = context.clubId!!,
                     tableId = context.tableId!!,
                     bookingTime = context.bookingDate!!,
                     partySize = context.guestCount!!,
-                    bookingGuestName = context.bookingGuestName ?: callbackQuery.from.username,
+                    bookingGuestName = guestName,
                     promoterId = context.promoterId,
                     source = context.source ?: "Бот",
                     phone = context.phone,
@@ -236,7 +254,6 @@ fun addBookingHandlers(
         val chatId = ChatId.fromId(message.chat.id)
         val phone = message.text
 
-        // Простая валидация номера телефона
         val phoneRegex = """^\+?\d{10,14}$""".toRegex()
         if (phone == null || !phone.matches(phoneRegex)) {
             bot.sendMessage(chatId, text = "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")

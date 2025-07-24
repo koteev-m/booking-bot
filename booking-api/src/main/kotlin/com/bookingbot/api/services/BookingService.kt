@@ -4,6 +4,8 @@ import com.bookingbot.api.model.booking.Booking
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.api.tables.BookingsTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class BookingService {
@@ -25,7 +27,7 @@ class BookingService {
             it[telegramId] = request.telegramId
             it[phone] = request.phone
             it[promoterId] = request.promoterId
-            it[source] = request.source
+            it[sourceName] = request.source
         }.value
         findBookingById(id) ?: throw IllegalStateException("Failed to create or find booking with id $id")
     }
@@ -62,7 +64,7 @@ class BookingService {
             it[telegramId] = request.telegramId
             it[phone] = request.phone
             it[promoterId] = request.promoterId
-            it[source] = request.source
+            it[sourceName] = request.source
         } > 0
     }
 
@@ -146,7 +148,7 @@ class BookingService {
         status = this[BookingsTable.status],
         createdAt = this[BookingsTable.createdAt],
         promoterId = this[BookingsTable.promoterId],
-        source = this[BookingsTable.source]
+        source = this[BookingsTable.sourceName]
     )
 }
 

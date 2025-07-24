@@ -41,6 +41,36 @@ class BookingService {
             .map { it.toBooking() }
     }
 
+    /** Возвращает все бронирования. */
+    fun getAllBookings(): List<Booking> = transaction {
+        BookingsTable.selectAll().map { it.toBooking() }
+    }
+
+    /** Возвращает конкретное бронирование по ID. */
+    fun getBooking(id: Int): Booking? = findBookingById(id)
+
+    /** Обновляет данные бронирования. */
+    fun updateBooking(id: Int, request: BookingRequest): Boolean = transaction {
+        BookingsTable.update({ BookingsTable.id eq id }) {
+            it[userId] = request.userId
+            it[clubId] = request.clubId
+            it[tableId] = request.tableId
+            it[bookingTime] = request.bookingTime
+            it[partySize] = request.partySize
+            it[expectedDuration] = request.expectedDuration
+            it[bookingGuestName] = request.bookingGuestName
+            it[telegramId] = request.telegramId
+            it[phone] = request.phone
+            it[promoterId] = request.promoterId
+            it[source] = request.source
+        } > 0
+    }
+
+    /** Удаляет бронирование. */
+    fun deleteBooking(id: Int): Boolean = transaction {
+        BookingsTable.deleteWhere { BookingsTable.id eq id } > 0
+    }
+
     /**
      * Находит бронирование по его уникальному ID.
      * @param id ID бронирования.

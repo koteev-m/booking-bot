@@ -84,24 +84,6 @@ fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService
                 }
             }
 
-            // Если callback_data начинается с "admin_cancel_"
-            data.startsWith("admin_cancel_") -> {
-                val bookingId = data.removePrefix("admin_cancel_").toInt()
-                // Отменяем бронь от имени персонала
-                if (bookingService.cancelBookingByStaff(bookingId)) {
-                    bot.editMessageText(
-                        chatId = ChatId.fromId(chatId), // <<< ИСПРАВЛЕНО
-                        messageId = messageId,
-                        text = message.text + "\n\n🚫 Бронь отменена менеджером.",
-                        parseMode = ParseMode.MARKDOWN,
-                        replyMarkup = null
-                    )
-                    bot.answerCallbackQuery(callbackQuery.id, text = "Бронь №$bookingId отменена.")
-                    // TODO: Отправить уведомление гостю об отмене его брони
-                } else {
-                    bot.answerCallbackQuery(callbackQuery.id, text = "Не удалось отменить бронь.", showAlert = true)
-                }
-            }
         }
     }
 }

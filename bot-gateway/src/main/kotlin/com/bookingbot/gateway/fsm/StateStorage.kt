@@ -1,24 +1,40 @@
 package com.bookingbot.gateway.fsm
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
-// Потокобезопасное хранилище для состояний и контекста пользователей
+// Потокобезопасное хранилище для состояний и контекста пользователей.
+// Для предотвращения гонок состояний операции для одного пользователя
+// защищены корутинным Mutex.
 object StateStorage {
     private val userStates = ConcurrentHashMap<Long, String>()
     private val userContexts = ConcurrentHashMap<Long, BookingContext>()
+    private val userMutexes = ConcurrentHashMap<Long, Mutex>()
 
-    fun setState(userId: Long, state: State) { // <<< Убедитесь, что здесь используется тип State
-        userStates[userId] = state.key
+    private fun mutex(userId: Long): Mutex =
+        userMutexes.getOrPut(userId) { Mutex() }
+
+    fun setState(userId: Long, state: State) = runBlocking {
+        mutex(userId).withLock {
+            userStates[userId] = state.key
+        }
     }
 
-    fun getState(userId: Long): String? = userStates[userId]
-
-    fun getContext(userId: Long): BookingContext {
-        return userContexts.getOrPut(userId) { BookingContext() }
+    fun getState(userId: Long): String? = runBlocking {
+        mutex(userId).withLock { userStates[userId] }
     }
 
-    fun clear(userId: Long) {
-        userStates.remove(userId)
-        userContexts.remove(userId)
+    fun getContext(userId: Long): BookingContext = runBlocking {
+        mutex(userId).withLock { userContexts.getOrPut(userId) { BookingContext() } }
+    }
+
+    fun clear(userId: Long) = runBlocking {
+        mutex(userId).withLock {
+            userStates.remove(userId)
+            userContexts.remove(userId)
+            userMutexes.remove(userId)
+        }
     }
 }

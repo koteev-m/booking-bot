@@ -4,6 +4,7 @@ import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.markup.Menus
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
@@ -21,7 +22,7 @@ fun addNavigationHandler(dispatcher: Dispatcher, userService: UserService) {
     }
 
     // Обработчик для inline-кнопки "Главное меню"
-    dispatcher.callbackQuery("back_to_main_menu") {
+    dispatcher.callbackQuery(CallbackData.BACK_TO_MAIN_MENU) {
         val userId = callbackQuery.from.id
         val message = callbackQuery.message ?: return@callbackQuery
         StateStorage.clear(userId)

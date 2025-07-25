@@ -12,12 +12,13 @@ import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.extensions.filters.Filter
 
 fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubService: ClubService) {
 
     // Шаг 1: Промоутер нажимает "Бронь для гостя"
-    dispatcher.callbackQuery("promoter_start_booking") {
+    dispatcher.callbackQuery(CallbackData.PROMOTER_START_BOOKING) {
         val promoterId = callbackQuery.from.id
         val promoter = userService.findOrCreateUser(promoterId, callbackQuery.from.username)
 
@@ -50,7 +51,7 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
         // Перенаправляем промоутера на стандартный флоу выбора клуба
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map {
-            InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}")
+            InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}")
         }.chunked(2)
 
         bot.sendMessage(

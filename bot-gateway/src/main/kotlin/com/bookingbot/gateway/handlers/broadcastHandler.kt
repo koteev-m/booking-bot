@@ -5,6 +5,7 @@ import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.util.StateFilter
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.message
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
 fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
 
     // Шаг 1: Админ нажимает "Создать рассылку"
-    dispatcher.callbackQuery("admin_create_broadcast") {
+    dispatcher.callbackQuery(CallbackData.ADMIN_CREATE_BROADCAST) {
         val adminId = callbackQuery.from.id
         val admin = userService.findOrCreateUser(adminId, null)
 
@@ -41,8 +42,8 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
 
         val userCount = userService.getAllUserIds().size
         val confirmationKeyboard = InlineKeyboardMarkup.create(listOf(
-            InlineKeyboardButton.CallbackData("✅ Отправить всем ($userCount чел.)", "broadcast_confirm_send"),
-            InlineKeyboardButton.CallbackData("❌ Отмена", "broadcast_cancel")
+            InlineKeyboardButton.CallbackData("✅ Отправить всем ($userCount чел.)", CallbackData.BROADCAST_CONFIRM_SEND),
+            InlineKeyboardButton.CallbackData("❌ Отмена", CallbackData.BROADCAST_CANCEL)
         ))
 
         StateStorage.setState(adminId, State.BroadcastConfirmation)
@@ -58,7 +59,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
         val messageIdToForward = context.broadcastMessageId
 
         when (callbackQuery.data) {
-            "broadcast_confirm_send" -> {
+            CallbackData.BROADCAST_CONFIRM_SEND -> {
                 if (messageIdToForward == null) {
                     bot.sendMessage(ChatId.fromId(adminId), "Ошибка: не найдено сообщение для рассылки.")
                     StateStorage.clear(adminId)
@@ -91,7 +92,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
                     bot.sendMessage(ChatId.fromId(adminId), "✅ Рассылка завершена.\nУспешно: $successCount\nНе удалось: $failCount")
                 }
             }
-            "broadcast_cancel" -> {
+            CallbackData.BROADCAST_CANCEL -> {
                 bot.editMessageText(ChatId.fromId(adminId), callbackQuery.message!!.messageId, text = "Рассылка отменена.")
             }
         }

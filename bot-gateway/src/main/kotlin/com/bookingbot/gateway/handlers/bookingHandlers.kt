@@ -9,6 +9,7 @@ import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.markup.CalendarKeyboard
 import com.bookingbot.gateway.markup.Menus
+import com.bookingbot.gateway.util.CallbackData
 import com.bookingbot.gateway.util.StateFilter
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
@@ -30,10 +31,10 @@ fun addBookingHandlers(
 ) {
 
     // Шаг 1: Пользователь нажимает "Выбрать клуб"
-    dispatcher.callbackQuery("select_club") {
+    dispatcher.callbackQuery(CallbackData.SELECT_CLUB) {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val clubs = clubService.getAllClubs()
-        val clubButtons = clubs.map { InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}") }.chunked(2)
+        val clubButtons = clubs.map { InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}") }.chunked(2)
         bot.sendMessage(chatId, text = "Выберите клуб:", replyMarkup = InlineKeyboardMarkup.create(clubButtons))
     }
 
@@ -44,8 +45,8 @@ fun addBookingHandlers(
 
         when {
             // Шаг 2: Показ меню клуба
-            data.startsWith("show_club_") -> {
-                val clubId = data.removePrefix("show_club_").toIntOrNull() ?: return@callbackQuery
+            data.startsWith(CallbackData.SHOW_CLUB_PREFIX) -> {
+                val clubId = data.removePrefix(CallbackData.SHOW_CLUB_PREFIX).toIntOrNull() ?: return@callbackQuery
                 val club = clubService.findClubById(clubId) ?: return@callbackQuery
                 bot.sendMessage(
                     chatId = chatId,
@@ -56,8 +57,8 @@ fun addBookingHandlers(
             }
 
             // Шаг 3: Начало бронирования (показ календаря)
-            data.startsWith("start_booking_") -> {
-                val clubId = data.removePrefix("start_booking_").toIntOrNull() ?: return@callbackQuery
+            data.startsWith(CallbackData.START_BOOKING_PREFIX) -> {
+                val clubId = data.removePrefix(CallbackData.START_BOOKING_PREFIX).toIntOrNull() ?: return@callbackQuery
                 StateStorage.getContext(chatId.id).clubId = clubId
                 StateStorage.setState(chatId.id, State.DateSelection)
                 val today = LocalDate.now()
@@ -74,7 +75,7 @@ fun addBookingHandlers(
             }
 
             // Навигация по календарю
-            data.startsWith("calendar_prev_") || data.startsWith("calendar_next_") -> {
+            data.startsWith(CallbackData.CALENDAR_PREV_PREFIX) || data.startsWith(CallbackData.CALENDAR_NEXT_PREFIX) -> {
                 val parts = data.split("_")
                 val direction = parts[1]
                 val yearMonth = java.time.YearMonth.parse(parts[2])
@@ -93,9 +94,9 @@ fun addBookingHandlers(
             }
 
             // Выбор дня в календаре
-            data.startsWith("calendar_day_") -> {
+            data.startsWith(CallbackData.CALENDAR_DAY_PREFIX) -> {
                 if (StateStorage.getState(chatId.id) != State.DateSelection.key) return@callbackQuery
-                val date = LocalDate.parse(data.removePrefix("calendar_day_"))
+                val date = LocalDate.parse(data.removePrefix(CallbackData.CALENDAR_DAY_PREFIX))
                 StateStorage.getContext(chatId.id).bookingDate = date.atStartOfDay(ZoneId.systemDefault()).toInstant()
                 StateStorage.setState(chatId.id, State.GuestCountInput)
                 bot.deleteMessage(chatId, callbackQuery.message!!.messageId)
@@ -103,9 +104,9 @@ fun addBookingHandlers(
             }
 
             // Шаг 6: Выбор стола
-            data.startsWith("table_") -> {
+            data.startsWith(CallbackData.TABLE_PREFIX) -> {
                 if (StateStorage.getState(chatId.id) != State.TableSelection.key) return@callbackQuery
-                val tableId = data.removePrefix("table_").toInt()
+                val tableId = data.removePrefix(CallbackData.TABLE_PREFIX).toInt()
                 val context = StateStorage.getContext(chatId.id)
                 context.tableId = tableId
 
@@ -135,8 +136,8 @@ fun addBookingHandlers(
 
                 val confirmationButtons = InlineKeyboardMarkup.create(
                     listOf(
-                        InlineKeyboardButton.CallbackData("✅ Подтвердить", "confirm_booking"),
-                        InlineKeyboardButton.CallbackData("❌ Отмена", "cancel_booking_fsm")
+                        InlineKeyboardButton.CallbackData("✅ Подтвердить", CallbackData.CONFIRM_BOOKING),
+                        InlineKeyboardButton.CallbackData("❌ Отмена", CallbackData.CANCEL_BOOKING_FSM)
                     )
                 )
                 StateStorage.setState(chatId.id, State.Confirmation)
@@ -150,7 +151,7 @@ fun addBookingHandlers(
             }
 
             // Шаг 7: Финальное подтверждение
-            data == "confirm_booking" -> {
+            data == CallbackData.CONFIRM_BOOKING -> {
                 if (StateStorage.getState(chatId.id) != State.Confirmation.key) return@callbackQuery
                 val context = StateStorage.getContext(chatId.id)
 
@@ -192,9 +193,9 @@ fun addBookingHandlers(
 
                     val adminKeyboard = InlineKeyboardMarkup.create(
                         listOf(
-                            InlineKeyboardButton.CallbackData("✅ Гости пришли", "admin_confirm_${booking.id}"),
-                            InlineKeyboardButton.CallbackData("❌ Неявка", "admin_noshow_${booking.id}"),
-                            InlineKeyboardButton.CallbackData("🚫 Отменить (Менеджер)", "admin_cancel_${booking.id}")
+                            InlineKeyboardButton.CallbackData("✅ Гости пришли", "${CallbackData.ADMIN_CONFIRM_PREFIX}${booking.id}"),
+                            InlineKeyboardButton.CallbackData("❌ Неявка", "${CallbackData.ADMIN_NOSHOW_PREFIX}${booking.id}"),
+                            InlineKeyboardButton.CallbackData("🚫 Отменить (Менеджер)", "${CallbackData.ADMIN_CANCEL_PREFIX}${booking.id}")
                         )
                     )
 
@@ -229,7 +230,7 @@ fun addBookingHandlers(
             }
 
             // Отмена в процессе FSM
-            data == "cancel_booking_fsm" -> {
+            data == CallbackData.CANCEL_BOOKING_FSM -> {
                 bot.editMessageText(chatId, callbackQuery.message!!.messageId, text = "Бронирование отменено.")
                 StateStorage.clear(chatId.id)
             }
@@ -276,7 +277,7 @@ fun addBookingHandlers(
             val deposit = tableService.calculateDeposit(it.id, context.guestCount!!)
             InlineKeyboardButton.CallbackData(
                 "Стол №${it.number} (до ${it.capacity} чел., депозит от ${deposit.toInt()} руб.)",
-                "table_${it.id}"
+                "${CallbackData.TABLE_PREFIX}${it.id}"
             )
         }.chunked(2)
         StateStorage.setState(chatId.id, State.TableSelection)

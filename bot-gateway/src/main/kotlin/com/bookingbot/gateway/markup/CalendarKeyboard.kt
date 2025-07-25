@@ -2,6 +2,7 @@ package com.bookingbot.gateway.markup
 
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.bookingbot.gateway.util.CallbackData
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -22,16 +23,16 @@ object CalendarKeyboard {
         val monthName = yearMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
         keyboard.add(
             listOf(
-                InlineKeyboardButton.CallbackData("◀", "calendar_prev_${yearMonth}"),
-                InlineKeyboardButton.CallbackData("$monthName $year", "calendar_ignore"),
-                InlineKeyboardButton.CallbackData("▶", "calendar_next_${yearMonth}")
+                InlineKeyboardButton.CallbackData("◀", "${CallbackData.CALENDAR_PREV_PREFIX}${yearMonth}"),
+                InlineKeyboardButton.CallbackData("$monthName $year", CallbackData.CALENDAR_IGNORE),
+                InlineKeyboardButton.CallbackData("▶", "${CallbackData.CALENDAR_NEXT_PREFIX}${yearMonth}")
             )
         )
 
         // 2. Дни недели
         keyboard.add(
             listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс").map {
-                InlineKeyboardButton.CallbackData(it, "calendar_ignore")
+                InlineKeyboardButton.CallbackData(it, CallbackData.CALENDAR_IGNORE)
             }
         )
 
@@ -41,7 +42,7 @@ object CalendarKeyboard {
 
         // Добавляем пустые кнопки для смещения
         repeat(dayOfWeekOffset) {
-            calendarDays.add(InlineKeyboardButton.CallbackData(" ", "calendar_ignore"))
+            calendarDays.add(InlineKeyboardButton.CallbackData(" ", CallbackData.CALENDAR_IGNORE))
         }
 
         // Добавляем кнопки с числами
@@ -49,9 +50,9 @@ object CalendarKeyboard {
             val date = yearMonth.atDay(day)
             // Не даем выбрать прошедшие даты
             if (date.isBefore(LocalDate.now())) {
-                calendarDays.add(InlineKeyboardButton.CallbackData(" ", "calendar_ignore"))
+                calendarDays.add(InlineKeyboardButton.CallbackData(" ", CallbackData.CALENDAR_IGNORE))
             } else {
-                calendarDays.add(InlineKeyboardButton.CallbackData(day.toString(), "calendar_day_$date"))
+                calendarDays.add(InlineKeyboardButton.CallbackData(day.toString(), "${CallbackData.CALENDAR_DAY_PREFIX}$date"))
             }
         }
 

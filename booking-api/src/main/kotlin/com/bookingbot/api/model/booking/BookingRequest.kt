@@ -13,5 +13,5 @@ data class BookingRequest(
     val telegramId: Long?,
     val phone: String?,
     val promoterId: Long? = null,
-    val source: String
+    val bookingSource: String
 )

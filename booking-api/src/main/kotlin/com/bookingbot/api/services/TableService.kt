@@ -90,6 +90,17 @@ class TableService {
     }
 
     /**
+     * Calculates deposit amount for given table and guest count.
+     */
+    fun calculateDeposit(tableId: Int, guestCount: Int): BigDecimal = transaction {
+        val depositPerGuest = TablesTable
+            .select { TablesTable.id eq tableId }
+            .map { it[TablesTable.minDeposit] }
+            .singleOrNull() ?: BigDecimal.ZERO
+        depositPerGuest.multiply(BigDecimal(guestCount))
+    }
+
+    /**
      * Приватная функция-расширение для конвертации строки из базы данных (ResultRow) в объект Table.
      */
     private fun ResultRow.toTable(): Table = Table(

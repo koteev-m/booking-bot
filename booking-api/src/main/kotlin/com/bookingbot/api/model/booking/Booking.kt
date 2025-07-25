@@ -16,5 +16,5 @@ data class Booking(
     val status: String,
     val createdAt: Instant,
     val promoterId: Long?,
-    val source: String
+    val bookingSource: String
 )

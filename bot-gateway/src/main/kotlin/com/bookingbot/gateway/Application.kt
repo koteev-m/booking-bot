@@ -6,6 +6,8 @@ import com.bookingbot.api.DatabaseFactory
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationStopped
+import com.bookingbot.gateway.ApplicationScope
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -87,4 +89,9 @@ fun Application.module() {
 
     // Запускаем бота вместе с сервером
     startTelegramBot()
+
+    // Отменяем все корутины при остановке приложения
+    environment.monitor.subscribe(ApplicationStopped) {
+        ApplicationScope.cancel()
+    }
 }

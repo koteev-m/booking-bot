@@ -12,7 +12,7 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import com.github.kotlintelegrambot.extensions.filters.Filter
-import kotlinx.coroutines.GlobalScope
+import com.bookingbot.gateway.ApplicationScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -72,7 +72,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
                 var failCount = 0
 
                 // Запускаем рассылку в отдельной корутине, чтобы не блокировать бота
-                GlobalScope.launch {
+                ApplicationScope.launch {
                     userIds.forEach { userId ->
                         try {
                             // Используем forwardMessage, чтобы сохранить форматирование, фото и т.д.

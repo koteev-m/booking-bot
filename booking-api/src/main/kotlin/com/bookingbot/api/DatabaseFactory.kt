@@ -1,6 +1,6 @@
 package com.bookingbot.api
 
-import com.bookingbot.api.tables.Bookings
+import com.bookingbot.api.tables.BookingsTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.typesafe.config.ConfigFactory
@@ -58,15 +58,21 @@ object DatabaseFactory {
         // Для H2 in-memory создаём схему через Exposed
         if (url.startsWith("jdbc:h2")) {
             transaction {
-                SchemaUtils.create(Bookings)
+                SchemaUtils.create(BookingsTable)
             }
         }
     }
 
-    /** Проверка существования таблицы (пример-заглушка). */
-    fun exists(tableName: String): Boolean =
-        transaction {
-            // тут можно сделать настоящий запрос к INFORMATION_SCHEMA
-            true
+    /**
+     * Проверяет существование таблицы в текущей базе данных.
+     * Реализовано через запрос к INFORMATION_SCHEMA, что работает как для H2,
+     * так и для Postgres.
+     */
+    fun exists(tableName: String): Boolean = transaction {
+        try {
+            exec("SELECT 1 FROM $tableName LIMIT 1") { } != null
+        } catch (e: Exception) {
+            false
         }
+    }
 }

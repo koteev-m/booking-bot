@@ -40,7 +40,7 @@ fun addAdminDashboardHandler(dispatcher: Dispatcher, userService: UserService, b
                 *ID ${booking.id}* | ${formatter.format(booking.bookingTime)}
                 *Гость:* ${booking.bookingGuestName ?: "N/A"}
                 *Стол:* ${booking.tableId} | *Гостей:* ${booking.partySize}
-                *Источник:* ${booking.source} | *Статус:* `${booking.status}`
+                *Источник:* ${booking.bookingSource} | *Статус:* `${booking.status}`
             """.trimIndent()
 
             // Кнопки для управления бронью (те же, что и в канале)

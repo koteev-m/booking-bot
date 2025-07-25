@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.ClubService
@@ -26,13 +27,13 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         // Проверяем, что команду использует админ или владелец
         if (admin.role != UserRole.ADMIN && admin.role != UserRole.OWNER) {
-            bot.sendMessage(ChatId.fromId(adminId), "У вас нет прав для использования этой команды.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "У вас нет прав для использования этой команды.")
             return@command
         }
 
         val commandParts = message.text?.split(" ") ?: return@command
         if (commandParts.size < 3) {
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 ChatId.fromId(adminId),
                 "Неверный формат. Используйте: `/answer <ID пользователя> <текст ответа>`",
                 parseMode = ParseMode.MARKDOWN
@@ -42,22 +43,22 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         val targetUserId = commandParts[1].toLongOrNull()
         if (targetUserId == null) {
-            bot.sendMessage(ChatId.fromId(adminId), "Неверный ID пользователя.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Неверный ID пользователя.")
             return@command
         }
 
         val answerText = commandParts.drop(2).joinToString(" ")
 
-        val result = bot.sendMessage(
+        val result = TelegramApi.sendMessage(
             chatId = ChatId.fromId(targetUserId),
             text = "💬 *Ответ от администрации:*\n\n$answerText",
             parseMode = ParseMode.MARKDOWN
         )
 
         if (result.isSuccess) {
-            bot.sendMessage(ChatId.fromId(adminId), "✅ Ответ успешно отправлен пользователю $targetUserId.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "✅ Ответ успешно отправлен пользователю $targetUserId.")
         } else {
-            bot.sendMessage(ChatId.fromId(adminId), "❌ Не удалось отправить ответ. Возможно, пользователь заблокировал бота.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "❌ Не удалось отправить ответ. Возможно, пользователь заблокировал бота.")
         }
     }
 
@@ -66,13 +67,13 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val requesterId = message.from?.id ?: return@command
 
         if (requesterId !in Bot.OWNER_IDS) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
             return@command
         }
 
         val commandParts = message.text?.split(" ") ?: return@command
         if (commandParts.size != 3) {
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 ChatId.fromId(requesterId),
                 "Неверный формат. Используйте: `/setrole <ID пользователя> <ROLE>`\nДоступные роли: GUEST, PROMOTER, ADMIN, OWNER",
                 parseMode = ParseMode.MARKDOWN
@@ -84,22 +85,22 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val roleName = commandParts[2].uppercase()
 
         if (targetUserId == null) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Неверный ID пользователя.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверный ID пользователя.")
             return@command
         }
 
         val newRole = try {
             UserRole.valueOf(roleName)
         } catch (e: IllegalArgumentException) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN, OWNER.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN, OWNER.")
             return@command
         }
 
         if (userService.updateUserRole(targetUserId, newRole)) {
-            bot.sendMessage(ChatId.fromId(requesterId), "✅ Роль для пользователя $targetUserId успешно изменена на $newRole.")
-            bot.sendMessage(ChatId.fromId(targetUserId), "Вам была назначена новая роль: *$newRole*", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "✅ Роль для пользователя $targetUserId успешно изменена на $newRole.")
+            TelegramApi.sendMessage(ChatId.fromId(targetUserId), "Вам была назначена новая роль: *$newRole*", parseMode = ParseMode.MARKDOWN)
         } else {
-            bot.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось найти пользователя с ID $targetUserId.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось найти пользователя с ID $targetUserId.")
         }
     }
 
@@ -108,13 +109,13 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val requesterId = message.from?.id ?: return@command
 
         if (requesterId !in Bot.OWNER_IDS) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Эта команда доступна только владельцам бота.")
             return@command
         }
 
         val commandParts = message.text?.split(" ") ?: return@command
         if (commandParts.size != 4) {
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 ChatId.fromId(requesterId),
                 "Неверный формат. Используйте: `/addstaff <ID пользователя> <ID клуба> <ROLE>`\nРоли: ADMIN, PROMOTER",
                 parseMode = ParseMode.MARKDOWN
@@ -127,29 +128,29 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val roleName = commandParts[3].uppercase()
 
         if (targetUserId == null || targetClubId == null) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Неверный формат ID пользователя или клуба.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверный формат ID пользователя или клуба.")
             return@command
         }
 
         val role = try { UserRole.valueOf(roleName) } catch (e: Exception) { null }
 
         if (role != UserRole.ADMIN && role != UserRole.PROMOTER) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: ADMIN, PROMOTER.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: ADMIN, PROMOTER.")
             return@command
         }
 
         if (clubService.findClubById(targetClubId) == null) {
-            bot.sendMessage(ChatId.fromId(requesterId), "Клуб с ID $targetClubId не найден.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Клуб с ID $targetClubId не найден.")
             return@command
         }
 
         userService.findOrCreateUser(targetUserId, null)
 
         if (userService.assignUserToClub(targetUserId, targetClubId, role)) {
-            bot.sendMessage(ChatId.fromId(requesterId), "✅ Пользователь $targetUserId успешно назначен на роль $role в клубе $targetClubId.")
-            bot.sendMessage(ChatId.fromId(targetUserId), "Вам назначена роль *$role* для клуба (ID: $targetClubId).", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "✅ Пользователь $targetUserId успешно назначен на роль $role в клубе $targetClubId.")
+            TelegramApi.sendMessage(ChatId.fromId(targetUserId), "Вам назначена роль *$role* для клуба (ID: $targetClubId).", parseMode = ParseMode.MARKDOWN)
         } else {
-            bot.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось назначить пользователя.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "❌ Не удалось назначить пользователя.")
         }
     }
 
@@ -159,12 +160,12 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val admin = userService.findOrCreateUser(adminId, null)
 
         if (admin.role != UserRole.ADMIN && admin.role != UserRole.OWNER) {
-            bot.sendMessage(ChatId.fromId(adminId), "У вас нет прав для использования этой команды.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "У вас нет прав для использования этой команды.")
             return@command
         }
 
         StateStorage.setState(adminId, State.AdminBookingGuestName)
-        bot.sendMessage(ChatId.fromId(adminId), "Начинаем создание брони. Введите имя гостя:")
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Начинаем создание брони. Введите имя гостя:")
     }
 
     // Админ вводит имя гостя
@@ -174,7 +175,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         StateStorage.getContext(adminId).bookingGuestName = guestName
         StateStorage.setState(adminId, State.AdminBookingSource)
-        bot.sendMessage(ChatId.fromId(adminId), "Имя гостя '$guestName' принято. Теперь введите источник брони (например, 'Звонок', 'Instagram'):")
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Имя гостя '$guestName' принято. Теперь введите источник брони (например, 'Звонок', 'Instagram'):")
     }
 
     // Админ вводит источник брони
@@ -184,7 +185,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         StateStorage.getContext(adminId).source = source
         StateStorage.setState(adminId, State.AdminBookingPhone)
-        bot.sendMessage(ChatId.fromId(adminId), "Источник '$source' принят. Теперь введите номер телефона гостя:")
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Источник '$source' принят. Теперь введите номер телефона гостя:")
     }
 
     // Админ вводит номер телефона гостя и переходит к выбору клуба
@@ -194,7 +195,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         val phoneRegex = """^\+?\d{10,14}$""".toRegex()
         if (phone == null || !phone.matches(phoneRegex)) {
-            bot.sendMessage(ChatId.fromId(adminId), "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
             return@message
         }
 
@@ -206,7 +207,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}")
         }.chunked(2)
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = ChatId.fromId(adminId),
             text = "Телефон '$phone' принят. Теперь выберите клуб для бронирования:",
             replyMarkup = InlineKeyboardMarkup.create(clubButtons)

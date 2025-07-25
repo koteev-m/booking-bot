@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
@@ -20,12 +21,12 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
 
         val clubName = args.joinToString(" ")
         if (clubName.isBlank()) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Укажите название клуба: `/addclub <название>`", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Укажите название клуба: `/addclub <название>`", parseMode = ParseMode.MARKDOWN)
             return@command
         }
 
         val newClub = clubService.createClub(clubName, "Описание для ${clubName}")
-        bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Клуб '${newClub.name}' успешно создан с ID: ${newClub.id}")
+        TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "✅ Клуб '${newClub.name}' успешно создан с ID: ${newClub.id}")
     }
 
     // Команда для установки канала администраторов
@@ -33,21 +34,21 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
         if (message.from?.id !in OWNER_IDS) return@command
 
         if (args.size != 2) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/setclubchannel <ID клуба> <ID канала>`", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/setclubchannel <ID клуба> <ID канала>`", parseMode = ParseMode.MARKDOWN)
             return@command
         }
         val clubId = args[0].toIntOrNull()
         val channelId = args[1].toLongOrNull()
 
         if (clubId == null || channelId == null) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат ID.")
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат ID.")
             return@command
         }
 
         if (clubService.setAdminChannel(clubId, channelId)) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Канал $channelId успешно назначен для клуба $clubId.")
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "✅ Канал $channelId успешно назначен для клуба $clubId.")
         } else {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "❌ Не удалось найти клуб с ID $clubId.")
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "❌ Не удалось найти клуб с ID $clubId.")
         }
     }
 
@@ -56,7 +57,7 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
         if (message.from?.id !in OWNER_IDS) return@command
 
         if (args.size != 4) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/addtable <ID клуба> <номер стола> <вместимость> <депозит>`", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/addtable <ID клуба> <номер стола> <вместимость> <депозит>`", parseMode = ParseMode.MARKDOWN)
             return@command
         }
         val clubId = args[0].toIntOrNull()
@@ -65,12 +66,12 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
         val deposit = args[3].toBigDecimalOrNull()
 
         if (clubId == null || tableNumber == null || capacity == null || deposit == null) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат данных.")
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат данных.")
             return@command
         }
 
         val newTable = tableService.createTable(clubId, tableNumber, capacity, deposit)
-        bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Стол №${newTable.number} добавлен в клуб $clubId.")
+        TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "✅ Стол №${newTable.number} добавлен в клуб $clubId.")
     }
 
     // Команда для добавления нового события/афиши
@@ -79,7 +80,7 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
 
         // Формат: /addevent <ID клуба> <ДД.ММ.ГГГГ> <Заголовок>
         if (args.size < 3) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/addevent <ID клуба> <ДД.ММ.ГГГГ> <Заголовок>`", parseMode = ParseMode.MARKDOWN)
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Формат: `/addevent <ID клуба> <ДД.ММ.ГГГГ> <Заголовок>`", parseMode = ParseMode.MARKDOWN)
             return@command
         }
         val clubId = args[0].toIntOrNull()
@@ -87,13 +88,13 @@ fun addOwnerHandlers(dispatcher: Dispatcher, clubService: ClubService, tableServ
         val title = args.drop(2).joinToString(" ")
 
         if (clubId == null || date == null || title.isBlank()) {
-            bot.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат данных.")
+            TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "Неверный формат данных.")
             return@command
         }
 
         // Опционально: можно добавить запрос на описание и картинку в FSM
         eventService.createEvent(clubId, title, "Описание скоро будет...", date.atStartOfDay(ZoneId.systemDefault()).toInstant(), null)
-        bot.sendMessage(ChatId.fromId(message.chat.id), "✅ Новое событие '$title' добавлено для клуба $clubId.")
+        TelegramApi.sendMessage(ChatId.fromId(message.chat.id), "✅ Новое событие '$title' добавлено для клуба $clubId.")
     }
 }
 

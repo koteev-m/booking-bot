@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.gateway.fsm.State
@@ -26,7 +27,7 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
             InlineKeyboardButton.CallbackData(text = club.name, callbackData = "${CallbackData.ASK_CLUB_PREFIX}${club.id}")
         }.chunked(2)
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = chatId,
             text = "Выберите клуб, которому хотите задать вопрос:",
             replyMarkup = InlineKeyboardMarkup.create(clubButtons)
@@ -70,13 +71,13 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
                 _Чтобы ответить, используйте команду `/answer ${message.from?.id} <текст ответа>`_
             """.trimIndent()
 
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 chatId = ChatId.fromId(channelId),
                 text = notification,
                 parseMode = ParseMode.MARKDOWN
             )
-            bot.sendMessage(chatId, "Ваш вопрос отправлен администрации клуба '${club.name}'. Ожидайте ответа.")
-        } ?: bot.sendMessage(chatId, "Не удалось отправить ваш вопрос. Попробуйте позже.")
+            TelegramApi.sendMessage(chatId, "Ваш вопрос отправлен администрации клуба '${club.name}'. Ожидайте ответа.")
+        } ?: TelegramApi.sendMessage(chatId, "Не удалось отправить ваш вопрос. Попробуйте позже.")
 
         StateStorage.clear(chatId.id)
     }

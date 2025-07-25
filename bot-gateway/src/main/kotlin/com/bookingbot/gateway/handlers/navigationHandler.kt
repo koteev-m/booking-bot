@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.UserService
@@ -16,7 +17,7 @@ fun addNavigationHandler(dispatcher: Dispatcher, userService: UserService) {
     dispatcher.command("cancel") {
         val userId = message.from?.id ?: return@command
         StateStorage.clear(userId)
-        bot.sendMessage(ChatId.fromId(userId), "Действие отменено. Вы в главном меню.")
+        TelegramApi.sendMessage(ChatId.fromId(userId), "Действие отменено. Вы в главном меню.")
         // Повторно вызываем /start, чтобы показать актуальное меню
         dispatcher.command("start")?.handler?.handleUpdate(bot, update)
     }

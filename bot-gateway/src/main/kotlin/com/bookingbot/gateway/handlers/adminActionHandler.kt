@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
@@ -73,7 +74,7 @@ fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService
                         Для уточнения деталей, пожалуйста, свяжитесь с клубом.
                     """.trimIndent()
 
-                    bot.sendMessage(
+                    TelegramApi.sendMessage(
                         chatId = ChatId.fromId(bookingToCancel.userId),
                         text = guestNotificationText,
                         parseMode = ParseMode.MARKDOWN

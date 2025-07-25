@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.UserService
@@ -18,7 +19,7 @@ fun addStartHandler(dispatcher: Dispatcher, userService: UserService) {
             UserRole.OWNER -> "Панель владельца. Выберите действие:" to Menus.adminMenu() // Владелец пока использует меню админа
         }
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = ChatId.fromId(message.chat.id),
             text = "Здравствуйте, ${user.username ?: "Гость"}! 👋\nВаша роль: ${user.role}.\n\n$menuText",
             replyMarkup = menuMarkup

@@ -111,6 +111,7 @@ fun addBookingHandlers(
 
                 val club = clubService.findClubById(context.clubId!!)
                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault())
+                val depositAmount = tableService.calculateDeposit(tableId, context.guestCount!!)
 
                 val staffInfo = if (context.source != null && context.source != "Бот") {
                     """
@@ -128,6 +129,7 @@ fun addBookingHandlers(
                     - *Стол ID:* ${context.tableId}
                     - *Гостей:* ${context.guestCount}
                     - *Дата:* ${formatter.format(context.bookingDate!!)}
+                    - *Депозит:* ${depositAmount.toInt()} руб.
                     $staffInfo
                 """.trimIndent()
 
@@ -166,7 +168,7 @@ fun addBookingHandlers(
                     partySize = context.guestCount!!,
                     bookingGuestName = guestName,
                     promoterId = context.promoterId,
-                    source = context.source ?: "Бот",
+                    bookingSource = context.source ?: "Бот",
                     phone = context.phone,
                     telegramId = chatId.id
                 )
@@ -210,7 +212,7 @@ fun addBookingHandlers(
                     
                     *Клуб:* ${club?.name ?: "Неизвестно"}
                     *ID брони:* ${booking.id}
-                    *Источник:* ${booking.source}
+                    *Источник:* ${booking.bookingSource}
                     *Гость:* @${booking.bookingGuestName ?: "N/A"}
                     *Кол-во человек:* ${booking.partySize}
                     *Стол ID:* ${booking.tableId}
@@ -270,7 +272,13 @@ fun addBookingHandlers(
             return@message
         }
 
-        val tableButtons = tables.map { InlineKeyboardButton.CallbackData("Стол №${it.number} (до ${it.capacity} чел.)", "table_${it.id}") }.chunked(2)
+        val tableButtons = tables.map {
+            val deposit = tableService.calculateDeposit(it.id, context.guestCount!!)
+            InlineKeyboardButton.CallbackData(
+                "Стол №${it.number} (до ${it.capacity} чел., депозит от ${deposit.toInt()} руб.)",
+                "table_${it.id}"
+            )
+        }.chunked(2)
         StateStorage.setState(chatId.id, State.TableSelection)
         bot.sendMessage(chatId, text = "Спасибо! Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
     }

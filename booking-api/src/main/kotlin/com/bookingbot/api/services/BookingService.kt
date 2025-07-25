@@ -2,9 +2,13 @@ package com.bookingbot.api.services
 
 import com.bookingbot.api.model.booking.Booking
 import com.bookingbot.api.model.booking.BookingRequest
+import com.bookingbot.api.model.PromoterStats
 import com.bookingbot.api.tables.BookingsTable
+import com.bookingbot.api.tables.TablesTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.math.BigDecimal
 
 class BookingService {
 
@@ -25,7 +29,7 @@ class BookingService {
             it[telegramId] = request.telegramId
             it[phone] = request.phone
             it[promoterId] = request.promoterId
-            it[source] = request.source
+            it[bookingSource] = request.bookingSource
         }.value
         findBookingById(id) ?: throw IllegalStateException("Failed to create or find booking with id $id")
     }
@@ -62,7 +66,7 @@ class BookingService {
             it[telegramId] = request.telegramId
             it[phone] = request.phone
             it[promoterId] = request.promoterId
-            it[source] = request.source
+            it[bookingSource] = request.bookingSource
         } > 0
     }
 
@@ -146,7 +150,23 @@ class BookingService {
         status = this[BookingsTable.status],
         createdAt = this[BookingsTable.createdAt],
         promoterId = this[BookingsTable.promoterId],
-        source = this[BookingsTable.source]
+        bookingSource = this[BookingsTable.bookingSource]
     )
+
+    /**
+     * Возвращает агрегированную статистику по промоутеру: общее количество
+     * гостей и суммарный депозит по его броням.
+     */
+    fun getPromoterStats(promoterId: Long): PromoterStats = transaction {
+        val rows = (BookingsTable innerJoin TablesTable)
+            .select { BookingsTable.promoterId eq promoterId }
+            .map { it[BookingsTable.partySize] to it[TablesTable.minDeposit] }
+
+        val totalGuests = rows.sumOf { it.first }
+        val totalDeposit = rows.fold(BigDecimal.ZERO) { acc, (size, deposit) ->
+            acc + deposit.multiply(BigDecimal(size))
+        }
+        PromoterStats(promoterId, totalGuests, totalDeposit)
+    }
 }
 

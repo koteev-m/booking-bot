@@ -6,18 +6,19 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.bookingbot.gateway.util.CallbackData
 
 fun addContentHandlers(dispatcher: Dispatcher) {
 
     // Обработчик для кнопки "Музыка"
-    dispatcher.callbackQuery("music_sets") {
+    dispatcher.callbackQuery(CallbackData.MUSIC_SETS) {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
 
         // Заглушка: в будущем этот список можно будет брать из БД
         val musicSets = listOf(
-            "DJ Proton - Live @ Cosmos (July 2025)" to "play_set_1",
-            "DJ Neutron - Summer Mix" to "play_set_2",
-            "DJ Electron - Night Vibes" to "play_set_3"
+            "DJ Proton - Live @ Cosmos (July 2025)" to "${CallbackData.PLAY_SET_PREFIX}1",
+            "DJ Neutron - Summer Mix" to "${CallbackData.PLAY_SET_PREFIX}2",
+            "DJ Electron - Night Vibes" to "${CallbackData.PLAY_SET_PREFIX}3"
         )
 
         val musicButtons = musicSets.map { (title, callbackData) ->
@@ -33,16 +34,16 @@ fun addContentHandlers(dispatcher: Dispatcher) {
 
     // Обработчик для выбора конкретного сета
     dispatcher.callbackQuery {
-        if (!callbackQuery.data.startsWith("play_set_")) return@callbackQuery
+        if (!callbackQuery.data.startsWith(CallbackData.PLAY_SET_PREFIX)) return@callbackQuery
 
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val setId = callbackQuery.data
 
         // Заглушка со ссылками
         val musicLinks = mapOf(
-            "play_set_1" to "https://soundcloud.com/example/dj-proton-live",
-            "play_set_2" to "https://www.youtube.com/watch?v=example2",
-            "play_set_3" to "https://soundcloud.com/example/dj-electron-vibes"
+            "${CallbackData.PLAY_SET_PREFIX}1" to "https://soundcloud.com/example/dj-proton-live",
+            "${CallbackData.PLAY_SET_PREFIX}2" to "https://www.youtube.com/watch?v=example2",
+            "${CallbackData.PLAY_SET_PREFIX}3" to "https://soundcloud.com/example/dj-electron-vibes"
         )
 
         val link = musicLinks[setId]

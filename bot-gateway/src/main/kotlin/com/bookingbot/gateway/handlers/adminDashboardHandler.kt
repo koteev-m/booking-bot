@@ -8,13 +8,14 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.bookingbot.gateway.util.CallbackData
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 fun addAdminDashboardHandler(dispatcher: Dispatcher, userService: UserService, bookingService: BookingService) {
 
     // Обработчик для кнопки "Управление бронями"
-    dispatcher.callbackQuery("admin_manage_bookings") {
+    dispatcher.callbackQuery(CallbackData.ADMIN_MANAGE_BOOKINGS) {
         val adminId = callbackQuery.from.id
         val chatId = ChatId.fromId(adminId)
 
@@ -46,9 +47,9 @@ fun addAdminDashboardHandler(dispatcher: Dispatcher, userService: UserService, b
             // Кнопки для управления бронью (те же, что и в канале)
             val adminKeyboard = InlineKeyboardMarkup.create(
                 listOf(
-                    InlineKeyboardButton.CallbackData("✅ Пришли", "admin_confirm_${booking.id}"),
-                    InlineKeyboardButton.CallbackData("❌ Неявка", "admin_noshow_${booking.id}"),
-                    InlineKeyboardButton.CallbackData("🚫 Отменить", "admin_cancel_${booking.id}")
+                    InlineKeyboardButton.CallbackData("✅ Пришли", "${CallbackData.ADMIN_CONFIRM_PREFIX}${booking.id}"),
+                    InlineKeyboardButton.CallbackData("❌ Неявка", "${CallbackData.ADMIN_NOSHOW_PREFIX}${booking.id}"),
+                    InlineKeyboardButton.CallbackData("🚫 Отменить", "${CallbackData.ADMIN_CANCEL_PREFIX}${booking.id}")
                 )
             )
 

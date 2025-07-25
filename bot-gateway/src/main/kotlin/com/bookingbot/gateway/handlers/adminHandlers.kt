@@ -7,6 +7,7 @@ import com.bookingbot.gateway.Bot
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.util.StateFilter
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.message
@@ -202,7 +203,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         // <<< НАЧАЛО: Перенаправляем на стандартный флоу выбора клуба
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map {
-            InlineKeyboardButton.CallbackData(it.name, "show_club_${it.id}")
+            InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}")
         }.chunked(2)
 
         bot.sendMessage(

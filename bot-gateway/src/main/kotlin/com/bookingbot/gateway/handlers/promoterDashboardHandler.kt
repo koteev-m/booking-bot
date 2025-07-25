@@ -5,6 +5,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.gateway.util.escapeMarkdownV2 // <<< ДОБАВЛЕН ИМПОРТ
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.ParseMode
 import java.time.ZoneId
@@ -13,7 +14,7 @@ import java.time.format.DateTimeFormatter
 fun addPromoterDashboardHandler(dispatcher: Dispatcher, bookingService: BookingService, clubService: ClubService) {
 
     // Обработчик для кнопки "Мои брони (промо)"
-    dispatcher.callbackQuery("promoter_my_bookings") {
+    dispatcher.callbackQuery(CallbackData.PROMOTER_MY_BOOKINGS) {
         val promoterId = callbackQuery.from.id
         val chatId = ChatId.fromId(promoterId)
 

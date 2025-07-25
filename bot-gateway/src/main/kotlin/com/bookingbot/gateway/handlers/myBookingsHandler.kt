@@ -9,12 +9,13 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import com.bookingbot.gateway.util.CallbackData
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService, clubService: ClubService) {
     // Обработчик для кнопки "Мои бронирования"
-    dispatcher.callbackQuery("my_bookings") {
+    dispatcher.callbackQuery(CallbackData.MY_BOOKINGS) {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val bookings = bookingService.findBookingsByUserId(chatId.id)
 
@@ -41,8 +42,8 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService,
             val bookingMenu = if (booking.status != "CANCELLED") {
                 InlineKeyboardMarkup.create(
                     listOf(
-                        InlineKeyboardButton.CallbackData("Изменить", "edit_booking_${booking.id}"),
-                        InlineKeyboardButton.CallbackData("Отменить", "cancel_booking_${booking.id}")
+                        InlineKeyboardButton.CallbackData("Изменить", "${CallbackData.EDIT_BOOKING_PREFIX}${booking.id}"),
+                        InlineKeyboardButton.CallbackData("Отменить", "${CallbackData.CANCEL_BOOKING_PREFIX}${booking.id}")
                     )
                 )
             } else {
@@ -65,11 +66,11 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService,
         val userId = callbackQuery.from.id
 
         when {
-            data.startsWith("edit_booking_") -> {
+            data.startsWith(CallbackData.EDIT_BOOKING_PREFIX) -> {
                 bot.answerCallbackQuery(callbackQuery.id, text = "Функция изменения пока не реализована.", showAlert = true)
             }
-            data.startsWith("cancel_booking_") -> {
-                val bookingId = data.removePrefix("cancel_booking_").toIntOrNull()
+            data.startsWith(CallbackData.CANCEL_BOOKING_PREFIX) -> {
+                val bookingId = data.removePrefix(CallbackData.CANCEL_BOOKING_PREFIX).toIntOrNull()
                 if (bookingId == null) {
                     bot.answerCallbackQuery(callbackQuery.id, "Ошибка: неверный ID брони.", showAlert = true)
                     return@callbackQuery

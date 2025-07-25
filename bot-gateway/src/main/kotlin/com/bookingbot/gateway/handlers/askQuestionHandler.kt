@@ -4,6 +4,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.util.StateFilter
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.message
@@ -16,13 +17,13 @@ import com.github.kotlintelegrambot.extensions.filters.Filter
 fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
 
     // Шаг 1: Пользователь нажимает "Задать вопрос"
-    dispatcher.callbackQuery("ask_question") {
+    dispatcher.callbackQuery(CallbackData.ASK_QUESTION) {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         StateStorage.setState(chatId.id, State.AskingQuestionClub)
 
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map { club ->
-            InlineKeyboardButton.CallbackData(text = club.name, callbackData = "ask_club_${club.id}")
+            InlineKeyboardButton.CallbackData(text = club.name, callbackData = "${CallbackData.ASK_CLUB_PREFIX}${club.id}")
         }.chunked(2)
 
         bot.sendMessage(
@@ -34,11 +35,11 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
 
     // Шаг 2: Пользователь выбрал клуб, просим ввести вопрос
     dispatcher.callbackQuery {
-        if (!callbackQuery.data.startsWith("ask_club_")) return@callbackQuery
+        if (!callbackQuery.data.startsWith(CallbackData.ASK_CLUB_PREFIX)) return@callbackQuery
         if (StateStorage.getState(callbackQuery.from.id) != State.AskingQuestionClub.key) return@callbackQuery
 
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
-        val clubId = callbackQuery.data.removePrefix("ask_club_").toInt()
+        val clubId = callbackQuery.data.removePrefix(CallbackData.ASK_CLUB_PREFIX).toInt()
 
         val context = StateStorage.getContext(chatId.id)
         context.clubId = clubId // Сохраняем ID клуба в контекст

@@ -5,6 +5,7 @@ import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorage
 import com.bookingbot.gateway.util.StateFilter
+import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.message
@@ -15,7 +16,7 @@ import com.github.kotlintelegrambot.extensions.filters.Filter
 
 fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableService, userService: UserService) {
     // Шаг 1: Админ нажимает "Управление столами"
-    dispatcher.callbackQuery("admin_manage_tables") {
+    dispatcher.callbackQuery(CallbackData.ADMIN_MANAGE_TABLES) {
         val adminId = callbackQuery.from.id
 
         // <<< НАЧАЛО: Проверяем, к какому клубу привязан админ
@@ -33,7 +34,7 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         }
 
         val tableButtons = tables.map {
-            InlineKeyboardButton.CallbackData("Стол №${it.number} (вмест: ${it.capacity}, деп: ${it.minDeposit})", "admin_edit_table_${it.id}")
+            InlineKeyboardButton.CallbackData("Стол №${it.number} (вмест: ${it.capacity}, деп: ${it.minDeposit})", "${CallbackData.ADMIN_EDIT_TABLE_PREFIX}${it.id}")
         }.chunked(1)
 
         StateStorage.setState(adminId, State.AdminSelectTableToEdit)
@@ -42,16 +43,16 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
 
     // Шаг 2: Админ выбрал стол, спрашиваем, что редактировать
     dispatcher.callbackQuery {
-        if (!callbackQuery.data.startsWith("admin_edit_table_")) return@callbackQuery
+        if (!callbackQuery.data.startsWith(CallbackData.ADMIN_EDIT_TABLE_PREFIX)) return@callbackQuery
         val adminId = callbackQuery.from.id
         if (StateStorage.getState(adminId) != State.AdminSelectTableToEdit.key) return@callbackQuery
 
-        val tableId = callbackQuery.data.removePrefix("admin_edit_table_").toInt()
+        val tableId = callbackQuery.data.removePrefix(CallbackData.ADMIN_EDIT_TABLE_PREFIX).toInt()
         StateStorage.getContext(adminId).editingTableId = tableId
 
         val editOptions = InlineKeyboardMarkup.create(listOf(
-            InlineKeyboardButton.CallbackData("Вместимость", "edit_capacity"),
-            InlineKeyboardButton.CallbackData("Депозит", "edit_deposit")
+            InlineKeyboardButton.CallbackData("Вместимость", CallbackData.EDIT_CAPACITY),
+            InlineKeyboardButton.CallbackData("Депозит", CallbackData.EDIT_DEPOSIT)
         ))
         bot.editMessageText(ChatId.fromId(adminId), callbackQuery.message!!.messageId, text = "Что вы хотите изменить для стола №$tableId?", replyMarkup = editOptions)
     }
@@ -60,11 +61,11 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
     dispatcher.callbackQuery {
         val adminId = callbackQuery.from.id
         when(callbackQuery.data) {
-            "edit_capacity" -> {
+            CallbackData.EDIT_CAPACITY -> {
                 StateStorage.setState(adminId, State.AdminEditingTableCapacity)
                 bot.sendMessage(ChatId.fromId(adminId), "Введите новую вместимость (число):")
             }
-            "edit_deposit" -> {
+            CallbackData.EDIT_DEPOSIT -> {
                 StateStorage.setState(adminId, State.AdminEditingTableDeposit)
                 bot.sendMessage(ChatId.fromId(adminId), "Введите новый депозит (число):")
             }

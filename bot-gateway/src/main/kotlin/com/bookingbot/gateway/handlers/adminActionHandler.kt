@@ -6,6 +6,7 @@ import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.ParseMode
+import com.bookingbot.gateway.util.CallbackData
 
 fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService, clubService: ClubService) {
     // Этот обработчик "слушает" нажатия на все inline-кнопки, которые видит бот
@@ -17,8 +18,8 @@ fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService
 
         when {
             // Если callback_data начинается с "admin_confirm_"
-            data.startsWith("admin_confirm_") -> {
-                val bookingId = data.removePrefix("admin_confirm_").toInt()
+            data.startsWith(CallbackData.ADMIN_CONFIRM_PREFIX) -> {
+                val bookingId = data.removePrefix(CallbackData.ADMIN_CONFIRM_PREFIX).toInt()
                 // Обновляем статус брони в базе данных на "SEATED" (гости пришли)
                 bookingService.updateBookingStatus(bookingId, "SEATED")
 
@@ -35,8 +36,8 @@ fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService
             }
 
             // Если callback_data начинается с "admin_noshow_"
-            data.startsWith("admin_noshow_") -> {
-                val bookingId = data.removePrefix("admin_noshow_").toInt()
+            data.startsWith(CallbackData.ADMIN_NOSHOW_PREFIX) -> {
+                val bookingId = data.removePrefix(CallbackData.ADMIN_NOSHOW_PREFIX).toInt()
                 // Обновляем статус брони в базе данных на "NO_SHOW" (неявка)
                 bookingService.updateBookingStatus(bookingId, "NO_SHOW")
 
@@ -50,8 +51,8 @@ fun addAdminActionHandler(dispatcher: Dispatcher, bookingService: BookingService
                 bot.answerCallbackQuery(callbackQuery.id, text = "Статус обновлен: Неявка.")
             }
 
-            data.startsWith("admin_cancel_") -> {
-                val bookingId = data.removePrefix("admin_cancel_").toInt()
+            data.startsWith(CallbackData.ADMIN_CANCEL_PREFIX) -> {
+                val bookingId = data.removePrefix(CallbackData.ADMIN_CANCEL_PREFIX).toInt()
                 val bookingToCancel = bookingService.findBookingById(bookingId) // Находим бронь перед отменой
 
                 if (bookingToCancel != null && bookingService.cancelBookingByStaff(bookingId)) {

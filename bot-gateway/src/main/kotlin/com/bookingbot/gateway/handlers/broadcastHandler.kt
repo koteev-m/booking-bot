@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.UserService
@@ -30,7 +31,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
         }
 
         StateStorage.setState(adminId, State.BroadcastMessageInput)
-        bot.sendMessage(ChatId.fromId(adminId), "Введите сообщение для рассылки. Вы можете использовать форматирование и прикрепить фото.")
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите сообщение для рассылки. Вы можете использовать форматирование и прикрепить фото.")
     }
 
     // Шаг 2: Админ отправляет сообщение для рассылки (любого типа)
@@ -47,7 +48,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
         ))
 
         StateStorage.setState(adminId, State.BroadcastConfirmation)
-        bot.sendMessage(ChatId.fromId(adminId), "Вы уверены, что хотите отправить это сообщение всем пользователям?", replyMarkup = confirmationKeyboard)
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Вы уверены, что хотите отправить это сообщение всем пользователям?", replyMarkup = confirmationKeyboard)
     }
 
     // Шаг 3: Админ подтверждает или отменяет рассылку
@@ -61,7 +62,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
         when (callbackQuery.data) {
             CallbackData.BROADCAST_CONFIRM_SEND -> {
                 if (messageIdToForward == null) {
-                    bot.sendMessage(ChatId.fromId(adminId), "Ошибка: не найдено сообщение для рассылки.")
+                    TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка: не найдено сообщение для рассылки.")
                     StateStorage.clear(adminId)
                     return@callbackQuery
                 }
@@ -77,7 +78,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
                     userIds.forEach { userId ->
                         try {
                             // Используем forwardMessage, чтобы сохранить форматирование, фото и т.д.
-                            bot.forwardMessage(
+                            TelegramApi.forwardMessage(
                                 chatId = ChatId.fromId(userId),
                                 fromChatId = ChatId.fromId(adminId),
                                 messageId = messageIdToForward
@@ -89,7 +90,7 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
                             failCount++
                         }
                     }
-                    bot.sendMessage(ChatId.fromId(adminId), "✅ Рассылка завершена.\nУспешно: $successCount\nНе удалось: $failCount")
+                    TelegramApi.sendMessage(ChatId.fromId(adminId), "✅ Рассылка завершена.\nУспешно: $successCount\nНе удалось: $failCount")
                 }
             }
             CallbackData.BROADCAST_CANCEL -> {

@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.ClubService
@@ -30,7 +31,7 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
 
         // Устанавливаем состояние ожидания имени гостя
         StateStorage.setState(promoterId, State.PromoterGuestNameInput)
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = ChatId.fromId(promoterId),
             text = "Вы начали создание брони для гостя. Пожалуйста, введите имя гостя:"
         )
@@ -54,7 +55,7 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
             InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}")
         }.chunked(2)
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = ChatId.fromId(promoterId),
             text = "Имя гостя '$guestName' принято. Теперь выберите клуб:",
             replyMarkup = InlineKeyboardMarkup.create(clubButtons)

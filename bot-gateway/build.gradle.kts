@@ -48,7 +48,8 @@ dependencies {
         exclude(group = "io.ktor")
     }
 
-    implementation("org.slf4j:slf4j-simple:2.0.7")
+    // centralized logging backend
+    implementation("ch.qos.logback:logback-classic:1.4.11")
 
     // В H2 нам нужен только для тестов в этом модуле
     testImplementation("com.h2database:h2:2.1.214")

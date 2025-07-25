@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.EventService
@@ -53,9 +54,9 @@ fun addClubInfoHandler(dispatcher: Dispatcher, clubService: ClubService, tableSe
                         *Телефон:* +7 (999) 123-45-67
                     """.trimIndent()
 
-                    bot.sendMessage(chatId, text = infoText, parseMode = ParseMode.MARKDOWN)
+                    TelegramApi.sendMessage(chatId, text = infoText, parseMode = ParseMode.MARKDOWN)
                 } else {
-                    bot.sendMessage(chatId, text = "Информация о клубе не найдена.")
+                    TelegramApi.sendMessage(chatId, text = "Информация о клубе не найдена.")
                 }
             }
             data.startsWith(CallbackData.CLUB_PHOTOS_PREFIX) -> {
@@ -66,7 +67,7 @@ fun addClubInfoHandler(dispatcher: Dispatcher, clubService: ClubService, tableSe
                 val events = eventService.findUpcomingEventsByClub(clubId)
 
                 if (events.isEmpty()) {
-                    bot.sendMessage(chatId, "В ближайшее время мероприятий не запланировано.")
+                    TelegramApi.sendMessage(chatId, "В ближайшее время мероприятий не запланировано.")
                     return@callbackQuery
                 }
 
@@ -74,7 +75,7 @@ fun addClubInfoHandler(dispatcher: Dispatcher, clubService: ClubService, tableSe
                 val eventsText = events.joinToString("\n\n") {
                     "*${formatter.format(it.eventDate)}* - ${it.title}"
                 }
-                bot.sendMessage(chatId, "*Ближайшие события:*\n\n$eventsText", parseMode = ParseMode.MARKDOWN)
+                TelegramApi.sendMessage(chatId, "*Ближайшие события:*\n\n$eventsText", parseMode = ParseMode.MARKDOWN)
             }
         }
     }

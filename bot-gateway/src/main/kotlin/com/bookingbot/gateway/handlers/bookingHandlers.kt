@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.api.services.BookingService
@@ -35,7 +36,7 @@ fun addBookingHandlers(
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map { InlineKeyboardButton.CallbackData(it.name, "${CallbackData.SHOW_CLUB_PREFIX}${it.id}") }.chunked(2)
-        bot.sendMessage(chatId, text = "Выберите клуб:", replyMarkup = InlineKeyboardMarkup.create(clubButtons))
+        TelegramApi.sendMessage(chatId, text = "Выберите клуб:", replyMarkup = InlineKeyboardMarkup.create(clubButtons))
     }
 
     // Единый обработчик для всех callback'ов, связанных с бронированием
@@ -48,7 +49,7 @@ fun addBookingHandlers(
             data.startsWith(CallbackData.SHOW_CLUB_PREFIX) -> {
                 val clubId = data.removePrefix(CallbackData.SHOW_CLUB_PREFIX).toIntOrNull() ?: return@callbackQuery
                 val club = clubService.findClubById(clubId) ?: return@callbackQuery
-                bot.sendMessage(
+                TelegramApi.sendMessage(
                     chatId = chatId,
                     text = "Вы выбрали клуб: *${club.name}*",
                     parseMode = ParseMode.MARKDOWN,
@@ -67,7 +68,7 @@ fun addBookingHandlers(
                 val keyboardWithBack = calendarMarkup.inlineKeyboard.toMutableList().apply {
                     add(listOf(Menus.backToMainMenuButton))
                 }
-                bot.sendMessage(
+                TelegramApi.sendMessage(
                     chatId = chatId,
                     text = "Выберите дату (или введите /cancel для отмены):",
                     replyMarkup = InlineKeyboardMarkup.create(keyboardWithBack)
@@ -100,7 +101,7 @@ fun addBookingHandlers(
                 StateStorage.getContext(chatId.id).bookingDate = date.atStartOfDay(ZoneId.systemDefault()).toInstant()
                 StateStorage.setState(chatId.id, State.GuestCountInput)
                 bot.deleteMessage(chatId, callbackQuery.message!!.messageId)
-                bot.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
+                TelegramApi.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
             }
 
             // Шаг 6: Выбор стола
@@ -199,7 +200,7 @@ fun addBookingHandlers(
                         )
                     )
 
-                    bot.sendMessage(
+                    TelegramApi.sendMessage(
                         chatId = ChatId.fromId(channelId),
                         text = notificationText,
                         parseMode = ParseMode.MARKDOWN,
@@ -220,7 +221,7 @@ fun addBookingHandlers(
                     *Время:* ${formatter.format(booking.bookingTime)}
                 """.trimIndent()
 
-                bot.sendMessage(
+                TelegramApi.sendMessage(
                     chatId = ChatId.fromId(Bot.GENERAL_ADMIN_CHANNEL_ID),
                     text = generalNotificationText,
                     parseMode = ParseMode.MARKDOWN
@@ -242,14 +243,14 @@ fun addBookingHandlers(
         val chatId = ChatId.fromId(message.chat.id)
         val guestCount = message.text?.toIntOrNull()
         if (guestCount == null || guestCount <= 0) {
-            bot.sendMessage(chatId, text = "Пожалуйста, введите корректное число гостей.")
+            TelegramApi.sendMessage(chatId, text = "Пожалуйста, введите корректное число гостей.")
             return@message
         }
         val context = StateStorage.getContext(chatId.id)
         context.guestCount = guestCount
 
         StateStorage.setState(chatId.id, State.ContactInput)
-        bot.sendMessage(chatId, text = "Отлично. Теперь, пожалуйста, введите ваш контактный номер телефона:")
+        TelegramApi.sendMessage(chatId, text = "Отлично. Теперь, пожалуйста, введите ваш контактный номер телефона:")
     }
 
     // Шаг 6: Пользователь ввел телефон, показываем столы
@@ -259,7 +260,7 @@ fun addBookingHandlers(
 
         val phoneRegex = """^\+?\d{10,14}$""".toRegex()
         if (phone == null || !phone.matches(phoneRegex)) {
-            bot.sendMessage(chatId, text = "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
+            TelegramApi.sendMessage(chatId, text = "Неверный формат номера. Пожалуйста, введите номер в международном формате, например: +79991234567")
             return@message
         }
 
@@ -268,7 +269,7 @@ fun addBookingHandlers(
 
         val tables = tableService.getAvailableTables(context.clubId!!, context.bookingDate!!, context.guestCount!!)
         if (tables.isEmpty()) {
-            bot.sendMessage(chatId, "К сожалению, нет свободных столов на указанное количество гостей.")
+            TelegramApi.sendMessage(chatId, "К сожалению, нет свободных столов на указанное количество гостей.")
             StateStorage.clear(chatId.id)
             return@message
         }
@@ -281,6 +282,6 @@ fun addBookingHandlers(
             )
         }.chunked(2)
         StateStorage.setState(chatId.id, State.TableSelection)
-        bot.sendMessage(chatId, text = "Спасибо! Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
+        TelegramApi.sendMessage(chatId, text = "Спасибо! Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
     }
 }

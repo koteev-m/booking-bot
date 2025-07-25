@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.UserService
@@ -29,7 +30,7 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
 
         val tables = tableService.getTablesForClub(clubId)
         if (tables.isEmpty()) {
-            bot.sendMessage(ChatId.fromId(adminId), "В вашем клубе еще не добавлены столы.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "В вашем клубе еще не добавлены столы.")
             return@callbackQuery
         }
 
@@ -38,7 +39,7 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         }.chunked(1)
 
         StateStorage.setState(adminId, State.AdminSelectTableToEdit)
-        bot.sendMessage(ChatId.fromId(adminId), "Выберите стол для редактирования:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
+        TelegramApi.sendMessage(ChatId.fromId(adminId), "Выберите стол для редактирования:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
     }
 
     // Шаг 2: Админ выбрал стол, спрашиваем, что редактировать
@@ -63,11 +64,11 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         when(callbackQuery.data) {
             CallbackData.EDIT_CAPACITY -> {
                 StateStorage.setState(adminId, State.AdminEditingTableCapacity)
-                bot.sendMessage(ChatId.fromId(adminId), "Введите новую вместимость (число):")
+                TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите новую вместимость (число):")
             }
             CallbackData.EDIT_DEPOSIT -> {
                 StateStorage.setState(adminId, State.AdminEditingTableDeposit)
-                bot.sendMessage(ChatId.fromId(adminId), "Введите новый депозит (число):")
+                TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите новый депозит (число):")
             }
         }
     }
@@ -80,9 +81,9 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
 
         if (newCapacity != null && tableId != null) {
             tableService.updateTableCapacity(tableId, newCapacity)
-            bot.sendMessage(ChatId.fromId(adminId), "Вместимость стола №$tableId обновлена на $newCapacity.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Вместимость стола №$tableId обновлена на $newCapacity.")
         } else {
-            bot.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
         }
         StateStorage.clear(adminId)
     }
@@ -95,9 +96,9 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
 
         if (newDeposit != null && tableId != null) {
             tableService.updateTableDeposit(tableId, newDeposit)
-            bot.sendMessage(ChatId.fromId(adminId), "Депозит стола №$tableId обновлен на $newDeposit.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Депозит стола №$tableId обновлен на $newDeposit.")
         } else {
-            bot.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
+            TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
         }
         StateStorage.clear(adminId)
     }

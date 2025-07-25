@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
@@ -21,11 +22,11 @@ fun addPromoterDashboardHandler(dispatcher: Dispatcher, bookingService: BookingS
         val bookings = bookingService.findBookingsByPromoterId(promoterId)
 
         if (bookings.isEmpty()) {
-            bot.sendMessage(chatId, "Вы еще не создали ни одного бронирования для гостей.")
+            TelegramApi.sendMessage(chatId, "Вы еще не создали ни одного бронирования для гостей.")
             return@callbackQuery
         }
 
-        bot.sendMessage(chatId, "*Ваши бронирования для гостей:*", parseMode = ParseMode.MARKDOWN)
+        TelegramApi.sendMessage(chatId, "*Ваши бронирования для гостей:*", parseMode = ParseMode.MARKDOWN)
 
         val formatter = DateTimeFormatter.ofPattern("dd.MM HH:mm").withZone(ZoneId.systemDefault())
         bookings.forEach { booking ->
@@ -40,7 +41,7 @@ fun addPromoterDashboardHandler(dispatcher: Dispatcher, bookingService: BookingS
                 *Статус:* `${booking.status}`
             """.trimIndent()
 
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 chatId = chatId,
                 text = bookingInfo,
                 parseMode = ParseMode.MARKDOWN_V2

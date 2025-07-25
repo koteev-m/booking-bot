@@ -11,16 +11,22 @@ import com.github.kotlintelegrambot.dispatch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import java.io.File
 
 fun startTelegramBot() {
     CoroutineScope(Dispatchers.IO).launch {
-        Bot.instance.startPolling()
-        println("Telegram Bot is listening for updates...")
+        try {
+            Bot.instance.startPolling()
+            logger.info("Telegram Bot is listening for updates...")
+        } catch (e: Exception) {
+            logger.error("Failed to start Telegram polling", e)
+        }
     }
 }
 
 object Bot {
+    private val logger = LoggerFactory.getLogger(Bot::class.java)
     // --- Пути к секретам в Docker ---
     private const val TOKEN_SECRET_PATH = "/run/secrets/telegram_bot_mix_token" // <<< ИЗМЕНЕНО
     private const val OWNERS_ID_SECRET_PATH = "/run/secrets/owner_id"

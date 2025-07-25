@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.UserService
@@ -29,11 +30,11 @@ fun addAdminDashboardHandler(dispatcher: Dispatcher, userService: UserService, b
         val bookings = bookingService.findActiveBookingsByClub(clubId)
 
         if (bookings.isEmpty()) {
-            bot.sendMessage(chatId, "В вашем клубе нет активных броней.")
+            TelegramApi.sendMessage(chatId, "В вашем клубе нет активных броней.")
             return@callbackQuery
         }
 
-        bot.sendMessage(chatId, "*Активные брони в вашем клубе:*", parseMode = ParseMode.MARKDOWN)
+        TelegramApi.sendMessage(chatId, "*Активные брони в вашем клубе:*", parseMode = ParseMode.MARKDOWN)
 
         val formatter = DateTimeFormatter.ofPattern("dd.MM HH:mm").withZone(ZoneId.systemDefault())
         bookings.forEach { booking ->
@@ -53,7 +54,7 @@ fun addAdminDashboardHandler(dispatcher: Dispatcher, userService: UserService, b
                 )
             )
 
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 chatId = chatId,
                 text = bookingInfo,
                 parseMode = ParseMode.MARKDOWN,

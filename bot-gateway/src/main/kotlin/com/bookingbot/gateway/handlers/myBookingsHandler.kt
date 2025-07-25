@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.services.ClubService
@@ -20,7 +21,7 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService,
         val bookings = bookingService.findBookingsByUserId(chatId.id)
 
         if (bookings.isEmpty()) {
-            bot.sendMessage(chatId, "У вас пока нет активных бронирований.")
+            TelegramApi.sendMessage(chatId, "У вас пока нет активных бронирований.")
             return@callbackQuery
         }
 
@@ -50,7 +51,7 @@ fun addMyBookingsHandler(dispatcher: Dispatcher, bookingService: BookingService,
                 null
             }
 
-            bot.sendMessage(
+            TelegramApi.sendMessage(
                 chatId = chatId,
                 text = bookingInfo,
                 replyMarkup = bookingMenu,

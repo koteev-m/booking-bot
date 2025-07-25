@@ -1,4 +1,5 @@
 package com.bookingbot.gateway.handlers
+import com.bookingbot.gateway.TelegramApi
 
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
@@ -25,7 +26,7 @@ fun addContentHandlers(dispatcher: Dispatcher) {
             listOf(InlineKeyboardButton.CallbackData(text = title, callbackData = callbackData))
         }
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = chatId,
             text = "🎧 Последние музыкальные сеты от наших резидентов:",
             replyMarkup = InlineKeyboardMarkup.create(musicButtons)
@@ -53,7 +54,7 @@ fun addContentHandlers(dispatcher: Dispatcher) {
             "Не удалось найти этот сет."
         }
 
-        bot.sendMessage(
+        TelegramApi.sendMessage(
             chatId = chatId,
             text = text,
             parseMode = ParseMode.MARKDOWN,

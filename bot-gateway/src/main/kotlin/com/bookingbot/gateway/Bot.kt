@@ -5,6 +5,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.UserService
 import com.bookingbot.api.services.EventService
+import com.bookingbot.gateway.waitlist.addWaitlistHandlers
 import com.bookingbot.gateway.handlers.*
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
@@ -98,6 +99,7 @@ object Bot {
             addAdminDashboardHandler(this, userService, bookingService)
             addPromoterDashboardHandler(this, bookingService, clubService)
             addBroadcastHandler(this, userService)
+            addWaitlistHandlers(this, bookingService, tableService)
         }
     }
 }

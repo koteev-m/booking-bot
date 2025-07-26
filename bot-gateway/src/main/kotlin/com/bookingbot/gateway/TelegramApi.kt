@@ -5,15 +5,14 @@ import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.replymarkup.ReplyMarkup
 import com.github.kotlintelegrambot.network.Response
 import com.github.kotlintelegrambot.entities.Message
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 /**
  * Wrapper around [Bot.instance] providing retry logic and centralized logging
  * for Telegram API calls.
  */
 object TelegramApi {
-    private val logger = LoggerFactory.getLogger(TelegramApi::class.java)
-    private const val MAX_RETRIES = 3
     private const val RETRY_DELAY_MS = 1000L
 
     fun sendMessage(
@@ -22,8 +21,8 @@ object TelegramApi {
         parseMode: ParseMode? = null,
         disableWebPagePreview: Boolean? = null,
         replyMarkup: ReplyMarkup? = null
-    ): Response<Message> {
-        return withRetry {
+    ): Response<Message> = runBlocking {
+        withRetry {
             Bot.instance.sendMessage(
                 chatId = chatId,
                 text = text,
@@ -38,8 +37,8 @@ object TelegramApi {
         chatId: ChatId,
         fromChatId: ChatId,
         messageId: Long
-    ): Response<Message> {
-        return withRetry {
+    ): Response<Message> = runBlocking {
+        withRetry {
             Bot.instance.forwardMessage(
                 chatId = chatId,
                 fromChatId = fromChatId,
@@ -48,25 +47,22 @@ object TelegramApi {
         }
     }
 
-    private fun <T> withRetry(block: () -> Response<T>): Response<T> {
-        var lastError: Exception? = null
-        repeat(MAX_RETRIES) { attempt ->
+    /**
+     * Executes [block] with retry logic using a non-blocking delay between attempts.
+     */
+    private suspend fun <T> withRetry(
+        attempts: Int = 3,
+        delayMs: Long = RETRY_DELAY_MS,
+        block: suspend () -> T
+    ): T {
+        var currentAttempt = 0
+        while (true) {
             try {
-                val result = block()
-                if (result.isSuccess) {
-                    return result
-                }
-                logger.error(
-                    "Telegram API error: {}",
-                    result.getError()?.description
-                )
+                return block()
             } catch (e: Exception) {
-                lastError = e
-                logger.warn("Telegram API call failed on attempt ${attempt + 1}", e)
+                if (++currentAttempt >= attempts) throw e
+                delay(delayMs)
             }
-            Thread.sleep(RETRY_DELAY_MS)
         }
-        logger.error("Telegram API call failed after $MAX_RETRIES attempts", lastError)
-        throw lastError ?: RuntimeException("Unknown Telegram API error")
     }
 }

@@ -16,3 +16,7 @@ jobs:
         run: ./gradlew dependencyCheckAnalyze
       - name: Start monitoring stack
         run: docker compose -f docker-compose.monitoring.yml up -d
+      - name: Create Telegram secret
+        run: echo "$TELEGRAM_BOT_TOKEN" | docker secret create tg_token -
+      - name: Deploy stack
+        run: docker stack deploy -c docker-compose.yml bookingbot

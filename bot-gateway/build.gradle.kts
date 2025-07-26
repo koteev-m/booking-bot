@@ -75,9 +75,9 @@ dependencies {
     testImplementation("io.ktor:ktor-serialization-kotlinx-json")
 
     // JUnit5 + Kotlin Test
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.9.23") // Явно указал версию для стабильности
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("io.ktor:ktor-client-mock:2.3.+")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

@@ -274,14 +274,7 @@ fun addBookingHandlers(
             return@message
         }
 
-        val tableButtons = tables.map {
-            val deposit = tableService.calculateDeposit(it.id, context.guestCount!!)
-            InlineKeyboardButton.CallbackData(
-                "Стол №${it.number} (до ${it.capacity} чел., депозит от ${deposit.toInt()} руб.)",
-                "${CallbackData.TABLE_PREFIX}${it.id}"
-            )
-        }.chunked(2)
         StateStorage.setState(chatId.id, State.TableSelection)
-        TelegramApi.sendMessage(chatId, text = "Спасибо! Выберите стол:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
+        bot.sendHallScheme(chatId.id, tables.map { it.id })
     }
 }

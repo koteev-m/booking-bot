@@ -29,7 +29,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "booking_bot"
-// Bot module requires external dependencies from JitPack which are not
-// accessible in the test environment. Excluding it from the build ensures
-// tests can run without hitting the blocked repository.
-include("booking-api", "libs")
+include("booking-api", "bot-gateway", "bot-gateway-e2e", "libs")

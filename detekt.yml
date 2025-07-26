@@ -1,0 +1,22 @@
+build:
+  maxIssues: 0
+  weights:
+    complexity: 2
+    LongParameterList: 1
+    style: 1
+plugins:
+  active: true
+processors:
+  active: true
+console-reports:
+  active: true
+  exclude:
+    - 'ProjectStatisticsReport'
+output-reports:
+  active: true
+  exclude: []
+style:
+  MagicNumber:
+    active: false
+coroutines:
+  active: true

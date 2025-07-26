@@ -15,6 +15,9 @@ koin = "3.6.0"
 jwt = "4.4.0"
 h2 = "2.1.214"
 junit = "5.10.0"
+mockito = "5.9.0"
+mockitoKotlin = "5.2.1"
+wiremock = "3.3.1"
 
 [libraries]
 exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
@@ -38,6 +41,11 @@ kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", versi
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }

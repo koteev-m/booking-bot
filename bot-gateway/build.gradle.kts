@@ -43,6 +43,11 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
 
+    // Koin
+    implementation("io.insert-koin:koin-ktor:3.6.0")
+    implementation("io.insert-koin:koin-logger-slf4j:3.6.0")
+    testImplementation("io.insert-koin:koin-test:3.6.0")
+
     // Telegram Bot, без тянущихся артефактов Ktor
     implementation("io.github.kotlin-telegram-bot:kotlin-telegram-bot:6.3.0") {
         exclude(group = "io.ktor")

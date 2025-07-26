@@ -29,56 +29,52 @@ kotlin {
 
 // Блок repositories здесь не нужен, так как он централизован в settings.gradle.kts
 
-// подтягиваем переменные, которые объявлены в root gradle.properties
-val ktorVersion: String by project
-val coroutinesVersion: String by project
-
 dependencies {
     implementation(project(":booking-api"))
 
     // Ktor
-    implementation(platform("io.ktor:ktor-bom:$ktorVersion"))
-    implementation("io.ktor:ktor-server-core-jvm")
-    implementation("io.ktor:ktor-server-netty-jvm")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
-    implementation("io.ktor:ktor-server-auth-jvm")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm")
-    implementation("io.ktor:ktor-server-auth-jwt:2.3.+")
-    implementation("com.auth0:java-jwt:4.4.0")
+    implementation(platform(libs.ktor.bom))
+    implementation(libs.ktor.server.core.jvm)
+    implementation(libs.ktor.server.netty.jvm)
+    implementation(libs.ktor.server.content.negotiation.jvm)
+    implementation(libs.ktor.serialization.kotlinx.json.jvm)
+    implementation(libs.ktor.server.auth.jvm)
+    implementation(libs.ktor.server.auth.jwt.jvm)
+    implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.java.jwt)
 
     // Koin
-    implementation("io.insert-koin:koin-ktor:3.6.0")
-    implementation("io.insert-koin:koin-logger-slf4j:3.6.0")
-    testImplementation("io.insert-koin:koin-test:3.6.0")
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
+    testImplementation(libs.koin.test)
 
     // Telegram Bot, без тянущихся артефактов Ktor
-    implementation("io.github.kotlin-telegram-bot:kotlin-telegram-bot:6.3.0") {
+    implementation(libs.telegram.bot) {
         exclude(group = "io.ktor")
     }
 
     // centralized logging backend
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation(libs.logback.classic)
 
     // В H2 нам нужен только для тестов в этом модуле
-    testImplementation("com.h2database:h2:2.1.214")
+    testImplementation(libs.h2)
 
     // Coroutines
-    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$coroutinesVersion"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+    implementation(platform(libs.coroutines.bom))
+    implementation(libs.coroutines.core)
+    testImplementation(libs.coroutines.test)
 
     // Тестовый Ktor
-    testImplementation(platform("io.ktor:ktor-bom:$ktorVersion"))
-    testImplementation("io.ktor:ktor-server-test-host-jvm")
-    testImplementation("io.ktor:ktor-client-cio")
-    testImplementation("io.ktor:ktor-client-content-negotiation")
-    testImplementation("io.ktor:ktor-serialization-kotlinx-json")
+    testImplementation(platform(libs.ktor.bom))
+    testImplementation(libs.ktor.server.test.host.jvm)
+    testImplementation(libs.ktor.client.cio)
+    testImplementation(libs.ktor.client.content.negotiation)
+    testImplementation(libs.ktor.serialization.kotlinx.json)
 
     // JUnit5 + Kotlin Test
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.9.23") // Явно указал версию для стабильности
-    testImplementation("io.ktor:ktor-client-mock:2.3.+")
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotlin.test.junit5) // Явно указал версию для стабильности
+    testImplementation(libs.ktor.client.mock)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

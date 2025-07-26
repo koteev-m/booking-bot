@@ -18,42 +18,37 @@ java {
 // repositories не нужен, наследуется из settings.gradle.kts
 
 dependencies {
-    // Версии из gradle.properties
-    val exposedVersion: String   by rootProject.extra
-    val flywayVersion: String    by rootProject.extra
-    val postgresVersion: String  by rootProject.extra
-
     // --- Exposed BOM + модули Exposed ---
     // Отличный подход — использовать BOM
-    implementation(platform("org.jetbrains.exposed:exposed-bom:$exposedVersion"))
-    implementation("org.jetbrains.exposed:exposed-core")
-    implementation("org.jetbrains.exposed:exposed-dao")
-    implementation("org.jetbrains.exposed:exposed-jdbc")
-    implementation("org.jetbrains.exposed:exposed-java-time")
+    implementation(platform(libs.exposed.bom))
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.java.time)
 
     // Flyway + Postgres
-    implementation("org.flywaydb:flyway-core:$flywayVersion")
-    runtimeOnly("org.postgresql:postgresql:$postgresVersion") // Драйвер БД лучше подключать как runtimeOnly
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.postgresql) // Драйвер БД лучше подключать как runtimeOnly
 
     // HikariCP и конфигурация
-    implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("com.typesafe:config:1.4.3")
+    implementation(libs.hikaricp)
+    implementation(libs.typesafe.config)
 
     // dotenv
-    implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
+    implementation(libs.dotenv.kotlin)
 
     // Ktor panel for admin UI
-    implementation("io.ktor:ktor-server-core:2.3.+")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.+")
-    implementation("io.ktor:ktor-server-auth:2.3.+")
-    implementation("io.ktor-panel:ktor-panel:1.4.+")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.panel)
 
     // --- Тесты ---
     // Всё правильно, тестовые зависимости с `testImplementation`
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${rootProject.extra["kotlinVersion"]}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
-    testImplementation("com.h2database:h2:2.1.214") // H2 только для тестов
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.kotlin.test.junit5)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.h2) // H2 только для тестов
 }
 
 // Настройка компилятора Kotlin

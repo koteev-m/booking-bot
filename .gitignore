@@ -52,3 +52,8 @@ bin/
 # Local properties and secrets
 local.properties
 /secrets/
+
+# Node
+node_modules/
+admin-panel/dist/
+admin-panel/node_modules/

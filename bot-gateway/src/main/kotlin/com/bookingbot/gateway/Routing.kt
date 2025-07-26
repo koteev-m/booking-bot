@@ -13,6 +13,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.ktor.server.auth.authenticate
 import org.koin.ktor.ext.inject
 
 /**
@@ -23,7 +24,8 @@ fun Application.configureRouting() {
     DatabaseFactory.init()
     routing {
         val service: BookingService by inject()
-        route("/bookings") {
+        authenticate("auth-jwt", "auth-basic") {
+            route("/bookings") {
             post {
                 val req = call.receive<BookingRequest>()
                 val created = service.createBooking(req)
@@ -70,6 +72,7 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.NotFound)
                 }
             }
+        }
         }
     }
     startTelegramBot()

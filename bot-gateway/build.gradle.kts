@@ -44,6 +44,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-auth-jwt-jvm")
+    implementation("io.ktor:ktor-server-auth-jwt:2.3.+")
     implementation("com.auth0:java-jwt:4.4.0")
 
     // Koin

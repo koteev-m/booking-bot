@@ -5,15 +5,25 @@ import com.bookingbot.api.services.BookingService
 import com.bookingbot.api.tables.BookingsTable
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.test.*
 
-class BookingServiceTest {
-    private val service = BookingService()
+class BookingServiceTest : KoinTest {
+    private val service: BookingService by inject()
+    private val testModule = module {
+        single { DatabaseFactory }
+        single { BookingService() }
+    }
 
     @BeforeTest
     fun setup() {
+        startKoin { modules(testModule) }
         DatabaseFactory.init()
         transaction { BookingsTable.deleteAll() }
     }
@@ -21,6 +31,7 @@ class BookingServiceTest {
     @AfterTest
     fun teardown() {
         transaction { BookingsTable.deleteAll() }
+        stopKoin()
     }
 
     @Test

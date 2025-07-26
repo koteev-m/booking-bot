@@ -1,0 +1,77 @@
+package com.bookingbot.gateway
+
+import com.bookingbot.api.DatabaseFactory
+import com.bookingbot.api.model.booking.`BookingRequest.kt`
+import com.bookingbot.api.services.BookingService
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.call
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import org.koin.ktor.ext.inject
+
+/**
+ * Configure HTTP routes.
+ */
+fun Application.configureRouting() {
+    install(ContentNegotiation) { json() }
+    DatabaseFactory.init()
+    routing {
+        val service: BookingService by inject()
+        route("/bookings") {
+            post {
+                val req = call.receive<`BookingRequest.kt`>()
+                val created = service.createBooking(req)
+                call.respond(HttpStatusCode.Created, created)
+            }
+            get {
+                val all = service.getAllBookings()
+                call.respond(HttpStatusCode.OK, all)
+            }
+            get("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
+                    return@get
+                }
+                service.getBooking(id)?.let { booking ->
+                    call.respond(HttpStatusCode.OK, booking)
+                } ?: call.respond(HttpStatusCode.NotFound)
+            }
+            put("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
+                    return@put
+                }
+                val req = call.receive<`BookingRequest.kt`>()
+                if (service.updateBooking(id, req)) {
+                    service.getBooking(id)?.let { updatedBooking ->
+                        call.respond(HttpStatusCode.OK, updatedBooking)
+                    } ?: call.respond(HttpStatusCode.NotFound)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+            delete("{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
+                    return@delete
+                }
+                if (service.deleteBooking(id)) {
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+        }
+    }
+    startTelegramBot()
+    environment.monitor.subscribe(ApplicationStopped) { ApplicationScope.cancel() }
+}

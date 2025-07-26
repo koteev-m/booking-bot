@@ -2,6 +2,7 @@ package com.bookingbot.api
 
 import com.bookingbot.api.tables.BookingsTable
 import com.bookingbot.api.tables.WaitlistTable
+import com.bookingbot.api.PromoterStatsTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.typesafe.config.ConfigFactory
@@ -59,7 +60,7 @@ object DatabaseFactory {
         // Для H2 in-memory создаём схему через Exposed
         if (url.startsWith("jdbc:h2")) {
             transaction {
-                SchemaUtils.create(BookingsTable, WaitlistTable)
+                SchemaUtils.create(BookingsTable, WaitlistTable, PromoterStatsTable)
             }
         }
     }

@@ -67,12 +67,17 @@ object DatabaseFactory {
 
     /**
      * Проверяет существование таблицы в текущей базе данных.
-     * Реализовано через запрос к INFORMATION_SCHEMA, что работает как для H2,
-     * так и для Postgres.
+     * Ранее название таблицы просто конкатенировалось в SQL-запрос, что
+     * позволяло выполнить SQL‑инъекцию. Теперь имя таблицы проверяется по
+     * небольшому списку разрешённых значений перед выполнением запроса.
+     *
+     * @throws IllegalArgumentException если tableName не входит в whitelist.
      */
     fun exists(tableName: String): Boolean = transaction {
+        val allowed = setOf("bookings", "tables", "promoters")
+        require(tableName in allowed) { "Unknown table name" }
         try {
-            exec("SELECT 1 FROM $tableName LIMIT 1") { } != null
+            exec("SELECT 1 FROM $tableName LIMIT 1") { rs -> rs.next() } ?: false
         } catch (e: Exception) {
             false
         }

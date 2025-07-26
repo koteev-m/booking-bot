@@ -4,7 +4,7 @@ import com.bookingbot.gateway.TelegramApi
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
 import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
@@ -30,16 +30,16 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
             return@callbackQuery
         }
 
-        StateStorage.setState(adminId, State.BroadcastMessageInput)
+        StateStorageImpl.saveState(adminId, State.BroadcastMessageInput)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите сообщение для рассылки. Вы можете использовать форматирование и прикрепить фото.")
     }
 
     // Шаг 2: Админ отправляет сообщение для рассылки (любого типа)
-    dispatcher.message(StateFilter(State.BroadcastMessageInput.key)) {
+    dispatcher.message(StateFilter(State.BroadcastMessageInput)) {
         val adminId = message.from?.id ?: return@message
 
         // Сохраняем ID сообщения, чтобы потом его переслать
-        StateStorage.getContext(adminId).broadcastMessageId = message.messageId
+        StateStorageImpl.getContext(adminId).broadcastMessageId = message.messageId
 
         val userCount = userService.getAllUserIds().size
         val confirmationKeyboard = InlineKeyboardMarkup.create(listOf(
@@ -47,23 +47,23 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
             InlineKeyboardButton.CallbackData("❌ Отмена", CallbackData.BROADCAST_CANCEL)
         ))
 
-        StateStorage.setState(adminId, State.BroadcastConfirmation)
+        StateStorageImpl.saveState(adminId, State.BroadcastConfirmation)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Вы уверены, что хотите отправить это сообщение всем пользователям?", replyMarkup = confirmationKeyboard)
     }
 
     // Шаг 3: Админ подтверждает или отменяет рассылку
     dispatcher.callbackQuery {
-        if (StateStorage.getState(callbackQuery.from.id) != State.BroadcastConfirmation.key) return@callbackQuery
+        if (StateStorageImpl.getState(callbackQuery.from.id) != State.BroadcastConfirmation) return@callbackQuery
 
         val adminId = callbackQuery.from.id
-        val context = StateStorage.getContext(adminId)
+        val context = StateStorageImpl.getContext(adminId)
         val messageIdToForward = context.broadcastMessageId
 
         when (callbackQuery.data) {
             CallbackData.BROADCAST_CONFIRM_SEND -> {
                 if (messageIdToForward == null) {
                     TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка: не найдено сообщение для рассылки.")
-                    StateStorage.clear(adminId)
+                    StateStorageImpl.clearState(adminId)
                     return@callbackQuery
                 }
 
@@ -97,6 +97,6 @@ fun addBroadcastHandler(dispatcher: Dispatcher, userService: UserService) {
                 bot.editMessageText(ChatId.fromId(adminId), callbackQuery.message!!.messageId, text = "Рассылка отменена.")
             }
         }
-        StateStorage.clear(adminId)
+        StateStorageImpl.clearState(adminId)
     }
 }

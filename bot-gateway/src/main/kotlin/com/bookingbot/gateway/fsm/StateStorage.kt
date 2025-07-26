@@ -1,40 +1,60 @@
 package com.bookingbot.gateway.fsm
 
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
-// Потокобезопасное хранилище для состояний и контекста пользователей.
-// Для предотвращения гонок состояний операции для одного пользователя
-// защищены корутинным Mutex.
-object StateStorage {
-    private val userStates = ConcurrentHashMap<Long, String>()
+/**
+ * Provides thread-safe, non-blocking access to user FSM state and context.
+ */
+interface StateStorage {
+    /**
+     * Saves the [state] for the specified [chatId] without blocking the caller.
+     */
+    suspend fun saveState(chatId: Long, state: State)
+
+    /**
+     * Returns the stored state for [chatId] or `null` if none, without blocking.
+     */
+    suspend fun getState(chatId: Long): State?
+
+    /**
+     * Returns a mutable context for [chatId], creating it if necessary.
+     * All access is synchronized and non-blocking.
+     */
+    suspend fun getContext(chatId: Long): BookingContext
+
+    /**
+     * Clears state and context for [chatId] in a non-blocking manner.
+     */
+    suspend fun clearState(chatId: Long)
+}
+
+/**
+ * In-memory implementation of [StateStorage] using a single [Mutex] to
+ * synchronize access to maps.
+ */
+object StateStorageImpl : StateStorage {
+    private val userStates = ConcurrentHashMap<Long, State>()
     private val userContexts = ConcurrentHashMap<Long, BookingContext>()
-    private val userMutexes = ConcurrentHashMap<Long, Mutex>()
+    private val mutex = Mutex()
 
-    private fun mutex(userId: Long): Mutex =
-        userMutexes.getOrPut(userId) { Mutex() }
-
-    fun setState(userId: Long, state: State) = runBlocking {
-        mutex(userId).withLock {
-            userStates[userId] = state.key
+    override suspend fun saveState(chatId: Long, state: State) {
+        mutex.withLock {
+            userStates[chatId] = state
         }
     }
 
-    fun getState(userId: Long): String? = runBlocking {
-        mutex(userId).withLock { userStates[userId] }
-    }
+    override suspend fun getState(chatId: Long): State? =
+        mutex.withLock { userStates[chatId] }
 
-    fun getContext(userId: Long): BookingContext = runBlocking {
-        mutex(userId).withLock { userContexts.getOrPut(userId) { BookingContext() } }
-    }
+    override suspend fun getContext(chatId: Long): BookingContext =
+        mutex.withLock { userContexts.getOrPut(chatId) { BookingContext() } }
 
-    fun clear(userId: Long) = runBlocking {
-        mutex(userId).withLock {
-            userStates.remove(userId)
-            userContexts.remove(userId)
-            userMutexes.remove(userId)
+    override suspend fun clearState(chatId: Long) {
+        mutex.withLock {
+            userStates.remove(chatId)
+            userContexts.remove(chatId)
         }
     }
 }

@@ -7,7 +7,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
 import com.bookingbot.gateway.Bot
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.markup.CalendarKeyboard
 import com.bookingbot.gateway.markup.Menus
 import com.bookingbot.gateway.util.CallbackData
@@ -60,8 +60,8 @@ fun addBookingHandlers(
             // Шаг 3: Начало бронирования (показ календаря)
             data.startsWith(CallbackData.START_BOOKING_PREFIX) -> {
                 val clubId = data.removePrefix(CallbackData.START_BOOKING_PREFIX).toIntOrNull() ?: return@callbackQuery
-                StateStorage.getContext(chatId.id).clubId = clubId
-                StateStorage.setState(chatId.id, State.DateSelection)
+                StateStorageImpl.getContext(chatId.id).clubId = clubId
+                StateStorageImpl.saveState(chatId.id, State.DateSelection)
                 val today = LocalDate.now()
 
                 val calendarMarkup = CalendarKeyboard.create(today.year, today.monthValue)
@@ -96,19 +96,19 @@ fun addBookingHandlers(
 
             // Выбор дня в календаре
             data.startsWith(CallbackData.CALENDAR_DAY_PREFIX) -> {
-                if (StateStorage.getState(chatId.id) != State.DateSelection.key) return@callbackQuery
+                if (StateStorageImpl.getState(chatId.id) != State.DateSelection) return@callbackQuery
                 val date = LocalDate.parse(data.removePrefix(CallbackData.CALENDAR_DAY_PREFIX))
-                StateStorage.getContext(chatId.id).bookingDate = date.atStartOfDay(ZoneId.systemDefault()).toInstant()
-                StateStorage.setState(chatId.id, State.GuestCountInput)
+                StateStorageImpl.getContext(chatId.id).bookingDate = date.atStartOfDay(ZoneId.systemDefault()).toInstant()
+                StateStorageImpl.saveState(chatId.id, State.GuestCountInput)
                 bot.deleteMessage(chatId, callbackQuery.message!!.messageId)
                 TelegramApi.sendMessage(chatId, text = "Вы выбрали: $date. Сколько будет гостей?")
             }
 
             // Шаг 6: Выбор стола
             data.startsWith(CallbackData.TABLE_PREFIX) -> {
-                if (StateStorage.getState(chatId.id) != State.TableSelection.key) return@callbackQuery
+                if (StateStorageImpl.getState(chatId.id) != State.TableSelection) return@callbackQuery
                 val tableId = data.removePrefix(CallbackData.TABLE_PREFIX).toInt()
-                val context = StateStorage.getContext(chatId.id)
+                val context = StateStorageImpl.getContext(chatId.id)
                 context.tableId = tableId
 
                 val club = clubService.findClubById(context.clubId!!)
@@ -141,7 +141,7 @@ fun addBookingHandlers(
                         InlineKeyboardButton.CallbackData("❌ Отмена", CallbackData.CANCEL_BOOKING_FSM)
                     )
                 )
-                StateStorage.setState(chatId.id, State.Confirmation)
+                StateStorageImpl.saveState(chatId.id, State.Confirmation)
                 bot.editMessageText(
                     chatId = chatId,
                     messageId = callbackQuery.message!!.messageId,
@@ -153,8 +153,8 @@ fun addBookingHandlers(
 
             // Шаг 7: Финальное подтверждение
             data == CallbackData.CONFIRM_BOOKING -> {
-                if (StateStorage.getState(chatId.id) != State.Confirmation.key) return@callbackQuery
-                val context = StateStorage.getContext(chatId.id)
+                if (StateStorageImpl.getState(chatId.id) != State.Confirmation) return@callbackQuery
+                val context = StateStorageImpl.getContext(chatId.id)
 
                 val guestName = if (context.promoterId != null || (context.source != null && context.source != "Бот")) {
                     context.bookingGuestName
@@ -227,34 +227,34 @@ fun addBookingHandlers(
                     parseMode = ParseMode.MARKDOWN
                 )
 
-                StateStorage.clear(chatId.id)
+                StateStorageImpl.clearState(chatId.id)
             }
 
             // Отмена в процессе FSM
             data == CallbackData.CANCEL_BOOKING_FSM -> {
                 bot.editMessageText(chatId, callbackQuery.message!!.messageId, text = "Бронирование отменено.")
-                StateStorage.clear(chatId.id)
+                StateStorageImpl.clearState(chatId.id)
             }
         }
     }
 
     // Шаг 5: Пользователь ввел количество гостей, просим телефон
-    dispatcher.message(Filter.Text and StateFilter(State.GuestCountInput.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.GuestCountInput)) {
         val chatId = ChatId.fromId(message.chat.id)
         val guestCount = message.text?.toIntOrNull()
         if (guestCount == null || guestCount <= 0) {
             TelegramApi.sendMessage(chatId, text = "Пожалуйста, введите корректное число гостей.")
             return@message
         }
-        val context = StateStorage.getContext(chatId.id)
+        val context = StateStorageImpl.getContext(chatId.id)
         context.guestCount = guestCount
 
-        StateStorage.setState(chatId.id, State.ContactInput)
+        StateStorageImpl.saveState(chatId.id, State.ContactInput)
         TelegramApi.sendMessage(chatId, text = "Отлично. Теперь, пожалуйста, введите ваш контактный номер телефона:")
     }
 
     // Шаг 6: Пользователь ввел телефон, показываем столы
-    dispatcher.message(Filter.Text and StateFilter(State.ContactInput.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.ContactInput)) {
         val chatId = ChatId.fromId(message.chat.id)
         val phone = message.text
 
@@ -264,17 +264,17 @@ fun addBookingHandlers(
             return@message
         }
 
-        val context = StateStorage.getContext(chatId.id)
+        val context = StateStorageImpl.getContext(chatId.id)
         context.phone = phone
 
         val tables = tableService.getAvailableTables(context.clubId!!, context.bookingDate!!, context.guestCount!!)
         if (tables.isEmpty()) {
             TelegramApi.sendMessage(chatId, "К сожалению, нет свободных столов на указанное количество гостей.")
-            StateStorage.clear(chatId.id)
+            StateStorageImpl.clearState(chatId.id)
             return@message
         }
 
-        StateStorage.setState(chatId.id, State.TableSelection)
+        StateStorageImpl.saveState(chatId.id, State.TableSelection)
         bot.sendHallScheme(chatId.id, tables.map { it.id })
     }
 }

@@ -5,7 +5,7 @@ import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
@@ -30,7 +30,7 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
         }
 
         // Устанавливаем состояние ожидания имени гостя
-        StateStorage.setState(promoterId, State.PromoterGuestNameInput)
+        StateStorageImpl.saveState(promoterId, State.PromoterGuestNameInput)
         TelegramApi.sendMessage(
             chatId = ChatId.fromId(promoterId),
             text = "Вы начали создание брони для гостя. Пожалуйста, введите имя гостя:"
@@ -38,12 +38,12 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
     }
 
     // Шаг 2: Промоутер вводит имя гостя
-    dispatcher.message(Filter.Text and StateFilter(State.PromoterGuestNameInput.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.PromoterGuestNameInput)) {
         val promoterId = message.from?.id ?: return@message
         val guestName = message.text ?: return@message
         val promoter = userService.findOrCreateUser(promoterId, message.from?.username)
 
-        val context = StateStorage.getContext(promoterId)
+        val context = StateStorageImpl.getContext(promoterId)
         // Сохраняем имя гостя, ID промоутера и источник брони в контекст
         context.bookingGuestName = guestName
         context.promoterId = promoterId
@@ -62,6 +62,6 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
         )
 
         // Переводим промоутера в состояние выбора клуба, чтобы FSM гостя подхватил диалог
-        StateStorage.setState(promoterId, State.ClubSelection)
+        StateStorageImpl.saveState(promoterId, State.ClubSelection)
     }
 }

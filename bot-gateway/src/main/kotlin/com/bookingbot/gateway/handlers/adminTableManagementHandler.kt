@@ -4,7 +4,7 @@ import com.bookingbot.gateway.TelegramApi
 import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
 import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
@@ -38,7 +38,7 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
             InlineKeyboardButton.CallbackData("Стол №${it.number} (вмест: ${it.capacity}, деп: ${it.minDeposit})", "${CallbackData.ADMIN_EDIT_TABLE_PREFIX}${it.id}")
         }.chunked(1)
 
-        StateStorage.setState(adminId, State.AdminSelectTableToEdit)
+        StateStorageImpl.saveState(adminId, State.AdminSelectTableToEdit)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Выберите стол для редактирования:", replyMarkup = InlineKeyboardMarkup.create(tableButtons))
     }
 
@@ -46,10 +46,10 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
     dispatcher.callbackQuery {
         if (!callbackQuery.data.startsWith(CallbackData.ADMIN_EDIT_TABLE_PREFIX)) return@callbackQuery
         val adminId = callbackQuery.from.id
-        if (StateStorage.getState(adminId) != State.AdminSelectTableToEdit.key) return@callbackQuery
+        if (StateStorageImpl.getState(adminId) != State.AdminSelectTableToEdit) return@callbackQuery
 
         val tableId = callbackQuery.data.removePrefix(CallbackData.ADMIN_EDIT_TABLE_PREFIX).toInt()
-        StateStorage.getContext(adminId).editingTableId = tableId
+        StateStorageImpl.getContext(adminId).editingTableId = tableId
 
         val editOptions = InlineKeyboardMarkup.create(listOf(
             InlineKeyboardButton.CallbackData("Вместимость", CallbackData.EDIT_CAPACITY),
@@ -63,21 +63,21 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         val adminId = callbackQuery.from.id
         when(callbackQuery.data) {
             CallbackData.EDIT_CAPACITY -> {
-                StateStorage.setState(adminId, State.AdminEditingTableCapacity)
+                StateStorageImpl.saveState(adminId, State.AdminEditingTableCapacity)
                 TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите новую вместимость (число):")
             }
             CallbackData.EDIT_DEPOSIT -> {
-                StateStorage.setState(adminId, State.AdminEditingTableDeposit)
+                StateStorageImpl.saveState(adminId, State.AdminEditingTableDeposit)
                 TelegramApi.sendMessage(ChatId.fromId(adminId), "Введите новый депозит (число):")
             }
         }
     }
 
     // Шаг 4: Админ вводит новое значение вместимости
-    dispatcher.message(Filter.Text and StateFilter(State.AdminEditingTableCapacity.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AdminEditingTableCapacity)) {
         val adminId = message.from!!.id
         val newCapacity = message.text?.toIntOrNull()
-        val tableId = StateStorage.getContext(adminId).editingTableId
+        val tableId = StateStorageImpl.getContext(adminId).editingTableId
 
         if (newCapacity != null && tableId != null) {
             tableService.updateTableCapacity(tableId, newCapacity)
@@ -85,14 +85,14 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         } else {
             TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
         }
-        StateStorage.clear(adminId)
+        StateStorageImpl.clearState(adminId)
     }
 
     // Шаг 5: Админ вводит новое значение депозита
-    dispatcher.message(Filter.Text and StateFilter(State.AdminEditingTableDeposit.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AdminEditingTableDeposit)) {
         val adminId = message.from!!.id
         val newDeposit = message.text?.toBigDecimalOrNull()
-        val tableId = StateStorage.getContext(adminId).editingTableId
+        val tableId = StateStorageImpl.getContext(adminId).editingTableId
 
         if (newDeposit != null && tableId != null) {
             tableService.updateTableDeposit(tableId, newDeposit)
@@ -100,6 +100,6 @@ fun addAdminTableManagementHandler(dispatcher: Dispatcher, tableService: TableSe
         } else {
             TelegramApi.sendMessage(ChatId.fromId(adminId), "Ошибка. Введите корректное число.")
         }
-        StateStorage.clear(adminId)
+        StateStorageImpl.clearState(adminId)
     }
 }

@@ -42,6 +42,12 @@ dependencies {
     // dotenv
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
+    // Ktor panel for admin UI
+    implementation("io.ktor:ktor-server-core:2.3.+")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.+")
+    implementation("io.ktor:ktor-server-auth:2.3.+")
+    implementation("io.ktor-panel:ktor-panel:1.4.+")
+
     // --- Тесты ---
     // Всё правильно, тестовые зависимости с `testImplementation`
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")

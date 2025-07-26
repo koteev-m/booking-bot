@@ -131,6 +131,21 @@ class BookingService {
     }
 
     /**
+     * Confirms a booking and updates promoter statistics.
+     */
+    fun confirm(bookingId: Int) = transaction {
+        val row = BookingsTable.select { BookingsTable.id eq bookingId }.single()
+        BookingsTable.update({ BookingsTable.id eq bookingId }) {
+            it[status] = "CONFIRMED"
+        }
+        val promoterId = row[BookingsTable.promoterId]
+        val depositPerGuest = TablesTable.select { TablesTable.id eq row[BookingsTable.tableId] }
+            .single()[TablesTable.minDeposit]
+        val totalDeposit = depositPerGuest.multiply(BigDecimal(row[BookingsTable.partySize]))
+        PromoterStats.increase(promoterId, totalDeposit)
+    }
+
+    /**
      * Находит все активные бронирования для конкретного клуба.
      */
     fun findActiveBookingsByClub(clubId: Int): List<Booking> = transaction {

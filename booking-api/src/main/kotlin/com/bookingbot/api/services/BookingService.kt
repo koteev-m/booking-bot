@@ -5,6 +5,7 @@ import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.api.model.PromoterStats
 import com.bookingbot.api.tables.BookingsTable
 import com.bookingbot.api.tables.TablesTable
+import com.bookingbot.api.services.WaitlistNotifierHolder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -31,7 +32,9 @@ class BookingService {
             it[promoterId] = request.promoterId
             it[bookingSource] = request.bookingSource
         }.value
-        findBookingById(id) ?: throw IllegalStateException("Failed to create or find booking with id $id")
+        val booking = findBookingById(id) ?: throw IllegalStateException("Failed to create or find booking with id $id")
+        WaitlistNotifierHolder.notifier.onNewBooking()
+        booking
     }
 
     /**
@@ -92,9 +95,11 @@ class BookingService {
      * @return true, если бронь была успешно найдена и отменена, иначе false.
      */
     fun cancelBooking(bookingId: Int, requestingUserId: Long): Boolean = transaction {
-        BookingsTable.update({ (BookingsTable.id eq bookingId) and (BookingsTable.userId eq requestingUserId) }) {
+        val updated = BookingsTable.update({ (BookingsTable.id eq bookingId) and (BookingsTable.userId eq requestingUserId) }) {
             it[status] = "CANCELLED"
         } > 0
+        if (updated) WaitlistNotifierHolder.notifier.onCancel()
+        updated
     }
 
     /**
@@ -102,9 +107,11 @@ class BookingService {
      * @return true, если бронь была успешно найдена и отменена, иначе false.
      */
     fun cancelBookingByStaff(bookingId: Int): Boolean = transaction {
-        BookingsTable.update({ BookingsTable.id eq bookingId }) {
+        val updated = BookingsTable.update({ BookingsTable.id eq bookingId }) {
             it[status] = "CANCELLED"
         } > 0
+        if (updated) WaitlistNotifierHolder.notifier.onCancel()
+        updated
     }
 
     /**

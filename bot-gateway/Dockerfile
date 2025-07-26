@@ -9,14 +9,10 @@ RUN ./gradlew :bot-gateway:clean :bot-gateway:shadowJar --no-daemon
 
 # ---------- runtime ----------
 FROM eclipse-temurin:17-jre-alpine
-LABEL maintainer="bookingbot team"
-ENV TZ=UTC
 WORKDIR /app
 COPY --from=builder /app/bot-gateway/build/libs/*.jar app.jar
 
-# Health-check endpoint exposed by Ktor
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD \
-  curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8080/health || exit 1
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]

@@ -27,7 +27,6 @@ services:
     build:
       context: ./bot-gateway # Указываем путь к Dockerfile для сборки образа
     container_name: booking_bot_app
-    restart: always
     depends_on:
       - db # Запускать этот сервис только после успешного запуска сервиса 'db'
     ports:
@@ -44,6 +43,18 @@ services:
       - telegram_bot_mix_token
       - owner_id
       - general_admin_channel_id
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"       # 50% of one CPU
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    restart: always
 
 # Определение томов для хранения данных
 volumes:

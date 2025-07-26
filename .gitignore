@@ -57,3 +57,11 @@ local.properties
 node_modules/
 admin-panel/dist/
 admin-panel/node_modules/
+# Ignore accidental empty files
+*~
+# Ignore zero-byte placeholder files
+:!*/
+**/*
+!*.*        # keep normal files
+!*/         # keep directories
+**/?.?*     # ignore single-char files created by mistake

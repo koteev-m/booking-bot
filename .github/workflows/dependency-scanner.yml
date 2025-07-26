@@ -1,0 +1,19 @@
+name: Dependency Scanner
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  pull_request:
+    paths: ['**/*.gradle.kts', '**/libs.versions.toml']
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/gradle-build-action@v3
+        with:
+          arguments: dependencyCheckAnalyze
+      - uses: gradle/gradle-build-action@v3
+        with:
+          arguments: dependencyUpdates

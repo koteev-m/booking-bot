@@ -22,6 +22,11 @@ dependencyResolutionManagement {
         mavenCentral()
         maven("https://jitpack.io")
     }
+    versionCatalogs {
+        create("libs") {
+            from(files("buildSrc/libs.versions.toml"))
+        }
+    }
 }
 rootProject.name = "booking_bot"
 // Bot module requires external dependencies from JitPack which are not

@@ -6,7 +6,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.UserService
 import com.bookingbot.gateway.Bot
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
 import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
@@ -164,32 +164,32 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             return@command
         }
 
-        StateStorage.setState(adminId, State.AdminBookingGuestName)
+        StateStorageImpl.saveState(adminId, State.AdminBookingGuestName)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Начинаем создание брони. Введите имя гостя:")
     }
 
     // Админ вводит имя гостя
-    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingGuestName.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingGuestName)) {
         val adminId = message.from?.id ?: return@message
         val guestName = message.text ?: return@message
 
-        StateStorage.getContext(adminId).bookingGuestName = guestName
-        StateStorage.setState(adminId, State.AdminBookingSource)
+        StateStorageImpl.getContext(adminId).bookingGuestName = guestName
+        StateStorageImpl.saveState(adminId, State.AdminBookingSource)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Имя гостя '$guestName' принято. Теперь введите источник брони (например, 'Звонок', 'Instagram'):")
     }
 
     // Админ вводит источник брони
-    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingSource.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingSource)) {
         val adminId = message.from?.id ?: return@message
         val source = message.text ?: return@message
 
-        StateStorage.getContext(adminId).source = source
-        StateStorage.setState(adminId, State.AdminBookingPhone)
+        StateStorageImpl.getContext(adminId).source = source
+        StateStorageImpl.saveState(adminId, State.AdminBookingPhone)
         TelegramApi.sendMessage(ChatId.fromId(adminId), "Источник '$source' принят. Теперь введите номер телефона гостя:")
     }
 
     // Админ вводит номер телефона гостя и переходит к выбору клуба
-    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingPhone.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AdminBookingPhone)) {
         val adminId = message.from?.id ?: return@message
         val phone = message.text
 
@@ -199,7 +199,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             return@message
         }
 
-        StateStorage.getContext(adminId).phone = phone
+        StateStorageImpl.getContext(adminId).phone = phone
 
         // <<< НАЧАЛО: Перенаправляем на стандартный флоу выбора клуба
         val clubs = clubService.getAllClubs()
@@ -213,7 +213,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
             replyMarkup = InlineKeyboardMarkup.create(clubButtons)
         )
         // Переводим админа в состояние выбора клуба, чтобы FSM гостя подхватил диалог
-        StateStorage.setState(adminId, State.ClubSelection)
+        StateStorageImpl.saveState(adminId, State.ClubSelection)
         // <<< КОНЕЦ: Перенаправляем на стандартный флоу выбора клуба
     }
 }

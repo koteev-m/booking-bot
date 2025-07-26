@@ -3,7 +3,7 @@ import com.bookingbot.gateway.TelegramApi
 
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.gateway.fsm.State
-import com.bookingbot.gateway.fsm.StateStorage
+import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
 import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
@@ -20,7 +20,7 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
     // Шаг 1: Пользователь нажимает "Задать вопрос"
     dispatcher.callbackQuery(CallbackData.ASK_QUESTION) {
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
-        StateStorage.setState(chatId.id, State.AskingQuestionClub)
+        StateStorageImpl.saveState(chatId.id, State.AskingQuestionClub)
 
         val clubs = clubService.getAllClubs()
         val clubButtons = clubs.map { club ->
@@ -37,15 +37,15 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
     // Шаг 2: Пользователь выбрал клуб, просим ввести вопрос
     dispatcher.callbackQuery {
         if (!callbackQuery.data.startsWith(CallbackData.ASK_CLUB_PREFIX)) return@callbackQuery
-        if (StateStorage.getState(callbackQuery.from.id) != State.AskingQuestionClub.key) return@callbackQuery
+        if (StateStorageImpl.getState(callbackQuery.from.id) != State.AskingQuestionClub) return@callbackQuery
 
         val chatId = ChatId.fromId(callbackQuery.message!!.chat.id)
         val clubId = callbackQuery.data.removePrefix(CallbackData.ASK_CLUB_PREFIX).toInt()
 
-        val context = StateStorage.getContext(chatId.id)
+        val context = StateStorageImpl.getContext(chatId.id)
         context.clubId = clubId // Сохраняем ID клуба в контекст
 
-        StateStorage.setState(chatId.id, State.AskingQuestionText)
+        StateStorageImpl.saveState(chatId.id, State.AskingQuestionText)
         bot.editMessageText(
             chatId = chatId,
             messageId = callbackQuery.message!!.messageId,
@@ -54,10 +54,10 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
     }
 
     // Шаг 3: Пользователь написал вопрос, пересылаем его
-    dispatcher.message(Filter.Text and StateFilter(State.AskingQuestionText.key)) {
+    dispatcher.message(Filter.Text and StateFilter(State.AskingQuestionText)) {
         val chatId = ChatId.fromId(message.chat.id)
         val questionText = message.text ?: return@message
-        val context = StateStorage.getContext(chatId.id)
+        val context = StateStorageImpl.getContext(chatId.id)
         val club = clubService.findClubById(context.clubId!!)
 
         club?.adminChannelId?.let { channelId -> // <<< ИСПРАВЛЕНО
@@ -79,6 +79,6 @@ fun addAskQuestionHandler(dispatcher: Dispatcher, clubService: ClubService) {
             TelegramApi.sendMessage(chatId, "Ваш вопрос отправлен администрации клуба '${club.name}'. Ожидайте ответа.")
         } ?: TelegramApi.sendMessage(chatId, "Не удалось отправить ваш вопрос. Попробуйте позже.")
 
-        StateStorage.clear(chatId.id)
+        StateStorageImpl.clearState(chatId.id)
     }
 }

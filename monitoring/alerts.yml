@@ -1,0 +1,11 @@
+groups:
+  - name: bookingbot
+    rules:
+      - alert: HighTelegramRetryFailures
+        expr: rate(telegram_api_retry_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Telegram retry failure rate"
+          description: "Retries failing > 5 per minute for 5m"

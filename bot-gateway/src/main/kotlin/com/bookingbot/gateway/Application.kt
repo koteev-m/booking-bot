@@ -21,5 +21,6 @@ fun Application.module() {
     val scheduler = WaitlistScheduler(get(), Duration.ofMinutes(1))
     scheduler.start()
     configureAuth()
+    configureMetrics()
     configureRouting()
 }

@@ -42,6 +42,9 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
+    implementation("io.ktor:ktor-server-auth-jvm")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm")
+    implementation("com.auth0:java-jwt:4.4.0")
 
     // Koin
     implementation("io.insert-koin:koin-ktor:3.6.0")

@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.replymarkup.ReplyMarkup
 import com.github.kotlintelegrambot.network.Response
 import com.github.kotlintelegrambot.entities.Message
+import io.micrometer.core.instrument.Counter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -14,6 +15,11 @@ import kotlinx.coroutines.runBlocking
  */
 object TelegramApi {
     private const val RETRY_DELAY_MS = 1000L
+
+    private val retryFailures = Counter
+        .builder("telegram_api_retry_failures_total")
+        .description("Failed retries to Telegram API")
+        .register(promRegistry)
 
     fun sendMessage(
         chatId: ChatId,
@@ -60,6 +66,7 @@ object TelegramApi {
             try {
                 return block()
             } catch (e: Exception) {
+                retryFailures.increment()
                 if (++currentAttempt >= attempts) throw e
                 delay(delayMs)
             }

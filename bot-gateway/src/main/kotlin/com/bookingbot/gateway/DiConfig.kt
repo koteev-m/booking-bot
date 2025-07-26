@@ -3,6 +3,8 @@ package com.bookingbot.gateway
 import com.bookingbot.api.DatabaseFactory
 import com.bookingbot.api.services.BookingService
 import io.ktor.server.application.Application
+import com.bookingbot.gateway.fsm.RedisStateStorage
+import com.bookingbot.gateway.fsm.StateStorage
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -15,6 +17,11 @@ import org.koin.core.module.dsl.singleOf
 val appModule = module {
     single { DatabaseFactory }
     single { BookingService() }
+    single<StateStorage> {
+        RedisStateStorage(
+            redisUrl = environment.config.property("redis.url").getString()
+        )
+    }
 }
 
 /**

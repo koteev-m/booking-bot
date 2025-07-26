@@ -1,11 +1,22 @@
-# 1) Берём готовый JDK 17 (multi-arch, без alpine)
-FROM eclipse-temurin:17-jdk
-
-# 2) Устанавливаем рабочую директорию
+# ---------- builder ----------
+FROM eclipse-temurin:17-jdk-alpine AS builder
 WORKDIR /app
+COPY gradlew gradlew
+COPY gradle gradle
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src src
+RUN ./gradlew :bot-gateway:clean :bot-gateway:shadowJar --no-daemon
 
-# 3) Копируем собранный fat JAR (shadowJar) в контейнер
-COPY build/libs/bot-gateway-all.jar app.jar
+# ---------- runtime ----------
+FROM eclipse-temurin:17-jre-alpine
+LABEL maintainer="bookingbot team"
+ENV TZ=UTC
+WORKDIR /app
+COPY --from=builder /app/bot-gateway/build/libs/*.jar app.jar
 
-# 4) Точка входа
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Health-check endpoint exposed by Ktor
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD \
+  curl -f http://localhost:8080/health || exit 1
+
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]

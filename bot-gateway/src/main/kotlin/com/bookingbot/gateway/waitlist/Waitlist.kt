@@ -7,8 +7,8 @@ import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.WaitlistDao
 import com.bookingbot.api.services.WaitlistNotifier
 import com.bookingbot.api.services.WaitlistNotifierHolder
-import com.bookingbot.api.tables.BookingsTable
 import com.bookingbot.api.tables.TablesTable
+import com.bookingbot.api.services.BookingRepository
 import com.bookingbot.gateway.ApplicationScope
 import com.bookingbot.gateway.Bot
 import com.bookingbot.gateway.TelegramApi
@@ -17,10 +17,10 @@ import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.entities.ChatId
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
+import kotlinx.coroutines.coroutineScope
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -36,31 +36,34 @@ class WaitlistNotifierImpl(
     override fun onNewBooking() { ApplicationScope.launch { scanWaitlist() } }
     override fun onCancel() { ApplicationScope.launch { scanWaitlist() } }
 
-    fun scanWaitlist() {
+    suspend fun scanWaitlist() = coroutineScope {
         val entries = WaitlistDao.findActive()
-        entries.forEach { entry ->
-            val tableId = entry.preferredTable ?: findAnyFreeTable(entry.desiredTime)
-            if (tableId != null && isTableFree(tableId, entry.desiredTime)) {
-                notifyGuest(entry, tableId)
+        entries.groupBy { it.desiredTime }.forEach { (time, group) ->
+            val localTime = LocalDateTime.ofInstant(time, ZoneId.systemDefault())
+            val freeMap = BookingRepository.findFreeTables(localTime)
+            val anyFree = freeMap.anyTrue()
+            val firstFree = freeMap.entries.firstOrNull { it.value }?.key
+            group.forEach { entry ->
+                val tableId = entry.preferredTable ?: firstFree
+                if (tableId != null && freeMap[tableId] == true) {
+                    notifyGuest(entry, tableId)
+                } else if (entry.preferredTable == null && anyFree && firstFree != null) {
+                    notifyGuest(entry, firstFree)
+                }
             }
         }
     }
 
-    private fun isTableFree(tableId: Int, time: Instant): Boolean = transaction {
-        BookingsTable.select {
-            (BookingsTable.tableId eq tableId) and
-                (BookingsTable.bookingTime eq time) and
-                (BookingsTable.status inList listOf("PENDING", "SEATED"))
-        }.empty()
-    }
+    private fun isTableFree(tableId: Int, time: Instant): Boolean =
+        BookingRepository
+            .findFreeTables(LocalDateTime.ofInstant(time, ZoneId.systemDefault()))[tableId] == true
 
-    private fun findAnyFreeTable(time: Instant): Int? = transaction {
-        val busy = BookingsTable.select {
-            (BookingsTable.bookingTime eq time) and
-                (BookingsTable.status inList listOf("PENDING", "SEATED"))
-        }.map { it[BookingsTable.tableId] }.toSet()
-        TablesTable.selectAll().map { it[TablesTable.id].value }.firstOrNull { it !in busy }
-    }
+    private fun findAnyFreeTable(time: Instant): Int? =
+        BookingRepository
+            .findFreeTables(LocalDateTime.ofInstant(time, ZoneId.systemDefault()))
+            .entries
+            .firstOrNull { it.value }
+            ?.key
 
     private fun notifyGuest(entry: WaitEntry, tableId: Int) {
         val timeText = DateTimeFormatter.ofPattern("HH:mm")
@@ -75,6 +78,8 @@ class WaitlistNotifierImpl(
         }
     }
 }
+
+private fun Map<Int, Boolean>.anyTrue() = values.any { it }
 
 /** Offer user to join waitlist. */
 fun Bot.offerWaitlist(chatId: Long, desiredTime: Instant, preferredTable: Int? = null) {

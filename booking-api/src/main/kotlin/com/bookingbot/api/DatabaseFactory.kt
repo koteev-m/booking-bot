@@ -66,20 +66,22 @@ object DatabaseFactory {
     }
 
     /**
-     * Проверяет существование таблицы в текущей базе данных.
-     * Ранее название таблицы просто конкатенировалось в SQL-запрос, что
-     * позволяло выполнить SQL‑инъекцию. Теперь имя таблицы проверяется по
-     * небольшому списку разрешённых значений перед выполнением запроса.
+     * Checks table existence without risking SQL injection.
+     * Accepts only known tables defined in [allowedTables].
      *
-     * @throws IllegalArgumentException если tableName не входит в whitelist.
+     * @throws IllegalArgumentException if tableName is not allowed.
      */
-    fun exists(tableName: String): Boolean = transaction {
-        val allowed = setOf("bookings", "tables", "promoters")
-        require(tableName in allowed) { "Unknown table name" }
-        try {
+    fun exists(tableName: String): Boolean {
+        val allowedTables = setOf(
+            "bookings",
+            "tables",
+            "promoters",
+            "waiting_list",
+            "loyalty_points"
+        )
+        require(tableName in allowedTables) { "Unknown table: $tableName" }
+        return transaction {
             exec("SELECT 1 FROM $tableName LIMIT 1") { rs -> rs.next() } ?: false
-        } catch (e: Exception) {
-            false
         }
     }
 }

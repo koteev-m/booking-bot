@@ -11,9 +11,9 @@ import io.ktor.server.application.call
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.auth.authenticate
+import com.bookingbot.gateway.Role
+import com.bookingbot.gateway.authorize
 import org.koin.ktor.ext.inject
 
 /**
@@ -24,18 +24,14 @@ fun Application.configureRouting() {
     DatabaseFactory.init()
     routing {
         val service: BookingService by inject()
-        authenticate("auth-jwt", "auth-basic") {
-            route("/bookings") {
-            post {
-                val req = call.receive<BookingRequest>()
-                val created = service.createBooking(req)
-                call.respond(HttpStatusCode.Created, created)
-            }
-            get {
+
+        // /bookings — RBA (Security)
+        authorize(Role.ADMIN, Role.USER) {
+            get("/bookings") {
                 val all = service.getAllBookings()
                 call.respond(HttpStatusCode.OK, all)
             }
-            get("{id}") {
+            get("/bookings/{id}") {
                 val id = call.parameters["id"]?.toIntOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
@@ -45,7 +41,15 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.OK, booking)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            put("{id}") {
+        }
+
+        authorize(Role.ADMIN) {
+            post("/bookings") {
+                val req = call.receive<BookingRequest>()
+                val created = service.createBooking(req)
+                call.respond(HttpStatusCode.Created, created)
+            }
+            put("/bookings/{id}") {
                 val id = call.parameters["id"]?.toIntOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
@@ -60,7 +64,7 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.NotFound)
                 }
             }
-            delete("{id}") {
+            delete("/bookings/{id}") {
                 val id = call.parameters["id"]?.toIntOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid booking ID")
@@ -72,7 +76,6 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.NotFound)
                 }
             }
-        }
         }
     }
     startTelegramBot()

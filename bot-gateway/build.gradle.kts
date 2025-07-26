@@ -55,9 +55,13 @@ dependencies {
 
     // centralized logging backend
     implementation(libs.logback.classic)
+    implementation(libs.lettuce.core)
+    implementation(libs.kotlinx.serialization.json)
 
     // В H2 нам нужен только для тестов в этом модуле
     testImplementation(libs.h2)
+    testImplementation(libs.jedis)
+    testImplementation(libs.embedded.redis)
 
     // Coroutines
     implementation(platform(libs.coroutines.bom))

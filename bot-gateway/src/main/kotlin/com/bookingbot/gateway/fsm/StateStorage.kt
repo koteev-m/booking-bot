@@ -1,8 +1,7 @@
 package com.bookingbot.gateway.fsm
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.ConcurrentHashMap
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Provides thread-safe, non-blocking access to user FSM state and context.
@@ -30,31 +29,18 @@ interface StateStorage {
     suspend fun clearState(chatId: Long)
 }
 
-/**
- * In-memory implementation of [StateStorage] using a single [Mutex] to
- * synchronize access to maps.
- */
-object StateStorageImpl : StateStorage {
-    private val userStates = ConcurrentHashMap<Long, State>()
-    private val userContexts = ConcurrentHashMap<Long, BookingContext>()
-    private val mutex = Mutex()
+object StateStorageImpl : StateStorage, KoinComponent {
+    private val delegate: StateStorage by inject()
 
-    override suspend fun saveState(chatId: Long, state: State) {
-        mutex.withLock {
-            userStates[chatId] = state
-        }
-    }
+    override suspend fun saveState(chatId: Long, state: State) =
+        delegate.saveState(chatId, state)
 
     override suspend fun getState(chatId: Long): State? =
-        mutex.withLock { userStates[chatId] }
+        delegate.getState(chatId)
 
     override suspend fun getContext(chatId: Long): BookingContext =
-        mutex.withLock { userContexts.getOrPut(chatId) { BookingContext() } }
+        delegate.getContext(chatId)
 
-    override suspend fun clearState(chatId: Long) {
-        mutex.withLock {
-            userStates.remove(chatId)
-            userContexts.remove(chatId)
-        }
-    }
+    override suspend fun clearState(chatId: Long) =
+        delegate.clearState(chatId)
 }

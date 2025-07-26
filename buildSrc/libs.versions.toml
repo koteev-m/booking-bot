@@ -18,6 +18,10 @@ junit = "5.10.0"
 mockito = "5.9.0"
 mockitoKotlin = "5.2.1"
 wiremock = "3.3.1"
+lettuce = "6.3.3.RELEASE"
+serializationJson = "1.6.3"
+jedis = "5.2.0"
+embeddedRedis = "0.7.3"
 
 [libraries]
 exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
@@ -71,3 +75,7 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }
+jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
+embedded-redis = { module = "it.ozimov:embedded-redis", version.ref = "embeddedRedis" }

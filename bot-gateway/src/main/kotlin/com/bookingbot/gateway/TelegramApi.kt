@@ -8,13 +8,15 @@ import com.github.kotlintelegrambot.entities.Message
 import io.micrometer.core.instrument.Counter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
+import io.github.reugn.kotlin.backoff.ExponentialBackoff
 
 /**
  * Wrapper around [Bot.instance] providing retry logic and centralized logging
  * for Telegram API calls.
  */
 object TelegramApi {
-    private const val RETRY_DELAY_MS = 1000L
+    private val config = BackoffConfig.load()
 
     private val retryFailures = Counter
         .builder("telegram_api_retry_failures_total")
@@ -28,7 +30,7 @@ object TelegramApi {
         disableWebPagePreview: Boolean? = null,
         replyMarkup: ReplyMarkup? = null
     ): Response<Message> = runBlocking {
-        withRetry {
+        withBackoffRetry {
             Bot.instance.sendMessage(
                 chatId = chatId,
                 text = text,
@@ -44,7 +46,7 @@ object TelegramApi {
         fromChatId: ChatId,
         messageId: Long
     ): Response<Message> = runBlocking {
-        withRetry {
+        withBackoffRetry {
             Bot.instance.forwardMessage(
                 chatId = chatId,
                 fromChatId = fromChatId,
@@ -56,19 +58,25 @@ object TelegramApi {
     /**
      * Executes [block] with retry logic using a non-blocking delay between attempts.
      */
-    private suspend fun <T> withRetry(
-        attempts: Int = 3,
-        delayMs: Long = RETRY_DELAY_MS,
+    inline suspend fun <T> withBackoffRetry(
         block: suspend () -> T
     ): T {
-        var currentAttempt = 0
+        val backoff = ExponentialBackoff(
+            config.initialDelayMs,
+            config.factor,
+            config.maxDelayMs,
+            config.jitterPct
+        )
+        var attempt = 0
         while (true) {
             try {
                 return block()
+            } catch (ce: CancellationException) {
+                throw ce
             } catch (e: Exception) {
                 retryFailures.increment()
-                if (++currentAttempt >= attempts) throw e
-                delay(delayMs)
+                if (++attempt >= config.maxAttempts) throw e
+                delay(backoff.nextDelay())
             }
         }
     }

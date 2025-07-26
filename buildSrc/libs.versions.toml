@@ -22,6 +22,7 @@ lettuce = "6.3.3.RELEASE"
 serializationJson = "1.6.3"
 jedis = "5.2.0"
 embeddedRedis = "0.7.3"
+kotlinBackoff = "1.2.4"
 
 [libraries]
 exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
@@ -79,3 +80,4 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }
 jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
 embedded-redis = { module = "it.ozimov:embedded-redis", version.ref = "embeddedRedis" }
+kotlin-backoff = { module = "io.github.reugn:kotlin-backoff", version.ref = "kotlinBackoff" }

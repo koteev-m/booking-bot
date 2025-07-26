@@ -1,60 +1,42 @@
 # Версия синтаксиса docker-compose
-version: '3.8'
+version: "3.8"
 
 # Определение сервисов (контейнеров)
 services:
-  # Сервис базы данных PostgreSQL
   db:
-    image: postgres:15-alpine  # Используем официальный и легковесный образ PostgreSQL 15
+    image: postgres:15-alpine
     container_name: booking_bot_db
-    restart: always # Всегда перезапускать контейнер, если он остановился
+    restart: always
     environment:
-      # Переменные окружения для создания базы данных и пользователя
-      # Эти значения будут использоваться сервисом bot-gateway для подключения
       POSTGRES_USER: booking_user
       POSTGRES_PASSWORD: booking_password
       POSTGRES_DB: booking_db
     ports:
-      # Пробрасываем порт 5432 из контейнера на хост-машину
-      # Это полезно для подключения к БД напрямую с вашего компьютера (например, через DBeaver)
       - "5432:5432"
     volumes:
-      # Создаем именованный том для хранения данных БД, чтобы они не терялись при перезапуске контейнера
       - postgres_data:/var/lib/postgresql/data
 
-  # Сервис вашего Telegram-бота
   bot-gateway:
     build:
-      context: ./bot-gateway # Указываем путь к Dockerfile для сборки образа
-    container_name: booking_bot_app
-    depends_on:
-      - db # Запускать этот сервис только после успешного запуска сервиса 'db'
-    ports:
-      # Пробрасываем порт 8080 для Ktor-сервера
-      - "8080:8080"
-    environment:
-      # Переменные окружения для подключения к базе данных
-      # Они должны совпадать с теми, что указаны в сервисе 'db'
-      DB_URL: jdbc:postgresql://db:5432/booking_db
-      DB_USER: booking_user
-      DB_PASS: booking_password
+      context: ./bot-gateway
+    env_file: .env
     secrets:
-      # Подключаем секреты, которые будут доступны внутри контейнера
-      - telegram_bot_mix_token
-      - owner_id
-      - general_admin_channel_id
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"       # 50% of one CPU
-          memory: 512M
-      restart_policy:
-        condition: on-failure
-    ulimits:
-      nofile:
-        soft: 1024
-        hard: 2048
-    restart: always
+      - tg_token
+    environment:
+      TELEGRAM_BOT_TOKEN_FILE: /run/secrets/tg_token
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  booking-api:
+    build:
+      context: ./booking-api
+    env_file: .env
+    depends_on:
+      - db
+    ports:
+      - "8081:8080"
 
 # Определение томов для хранения данных
 volumes:
@@ -63,9 +45,5 @@ volumes:
 
 # Определение секретов
 secrets:
-  telegram_bot_mix_token:
-    file: ./secrets/telegram_bot_mix_token.txt # Путь к файлу с токеном бота
-  owner_id:
-    file: ./secrets/owner_id.txt # Путь к файлу с ID владельцев
-  general_admin_channel_id:
-    file: ./secrets/general_admin_channel_id.txt # Путь к файлу с ID общего канала
+  tg_token:
+    file: ./secrets/tg_token.txt   # for local dev; CI will create via docker secret create

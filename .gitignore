@@ -51,7 +51,7 @@ bin/
 
 # Local properties and secrets
 local.properties
-/secrets/
+secrets/*
 
 # Node
 node_modules/

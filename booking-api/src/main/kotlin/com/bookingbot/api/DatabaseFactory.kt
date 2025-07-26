@@ -29,8 +29,8 @@ object DatabaseFactory {
         val user = System.getenv("DB_USER")?.takeIf(String::isNotBlank)
             ?: if (config.hasPath("db.user")) config.getString("db.user") else "sa"
 
-        val password = System.getenv("DB_PASS")?.takeIf(String::isNotBlank)
-            ?: if (config.hasPath("db.pass")) config.getString("db.pass") else ""
+        val password = System.getenv("DB_PASSWORD")?.takeIf(String::isNotBlank)
+            ?: if (config.hasPath("db.password")) config.getString("db.password") else ""
 
         val driver = when {
             url.startsWith("jdbc:h2")         -> "org.h2.Driver"

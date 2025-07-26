@@ -16,7 +16,6 @@ import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.entities.ChatId
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -34,19 +33,8 @@ class WaitlistNotifierImpl(
 ) : WaitlistNotifier {
     private val logger = LoggerFactory.getLogger(WaitlistNotifierImpl::class.java)
 
-    init { start() }
-
     override fun onNewBooking() { ApplicationScope.launch { scanWaitlist() } }
     override fun onCancel() { ApplicationScope.launch { scanWaitlist() } }
-
-    private fun start() {
-        ApplicationScope.launch {
-            while (true) {
-                scanWaitlist()
-                delay(15 * 60_000L)
-            }
-        }
-    }
 
     fun scanWaitlist() {
         val entries = WaitlistDao.findActive()

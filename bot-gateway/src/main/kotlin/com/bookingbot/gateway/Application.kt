@@ -3,6 +3,9 @@ package com.bookingbot.gateway
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import com.bookingbot.gateway.waitlist.WaitlistScheduler
+import java.time.Duration
+import org.koin.ktor.ext.get
 
 fun main() {
     embeddedServer(
@@ -15,6 +18,8 @@ fun main() {
 
 fun Application.module() {
     configureDI()
+    val scheduler = WaitlistScheduler(get(), Duration.ofMinutes(1))
+    scheduler.start()
     configureAuth()
     configureRouting()
 }

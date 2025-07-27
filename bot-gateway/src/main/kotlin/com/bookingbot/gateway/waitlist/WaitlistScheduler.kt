@@ -3,7 +3,6 @@ package com.bookingbot.gateway.waitlist
 import com.bookingbot.api.services.BookingService
 import io.ktor.server.application.*
 import kotlinx.coroutines.*
-import java.time.Duration
 
 /**
  * Periodically processes wait-list entries.
@@ -13,7 +12,7 @@ import java.time.Duration
  */
 class WaitlistScheduler(
     private val bookingService: BookingService,
-    private val period: Duration = Duration.ofMinutes(1)
+    private val periodMs: Long
 ) {
     private lateinit var job: Job
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -22,7 +21,7 @@ class WaitlistScheduler(
         job = scope.launch {
             while (isActive) {
                 bookingService.processWaitlist()   // existing business logic
-                delay(period.toMillis())
+                delay(periodMs)
             }
         }
         environment.monitor.subscribe(ApplicationStopped) { job.cancel() }

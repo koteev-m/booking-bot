@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.lettuce.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.typesafe.config)
     implementation(libs.kotlin.backoff)
 
     // В H2 нам нужен только для тестов в этом модуле

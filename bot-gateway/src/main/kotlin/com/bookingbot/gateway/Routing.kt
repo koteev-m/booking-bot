@@ -25,6 +25,11 @@ fun Application.configureRouting() {
     routing {
         val service: BookingService by inject()
 
+        post("/booking") {
+            val dto = call.receive<BookingRequest>()
+            call.respond(service.createBooking(dto))
+        }
+
         // /bookings — RBA (Security)
         authorize(Role.ADMIN, Role.USER) {
             get("/bookings") {

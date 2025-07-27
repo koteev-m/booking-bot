@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.ktor.server.auth.jvm)
     implementation(libs.ktor.server.auth.jwt.jvm)
     implementation(libs.ktor.server.auth.jwt)
+    implementation("io.ktor:ktor-server-rate-limit:3.2.2")
+    implementation("io.ktor:ktor-server-request-validation:3.2.2")
     implementation(libs.java.jwt)
 
     // Koin
@@ -80,6 +82,8 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotlin.test.junit5) // Явно указал версию для стабильности
     testImplementation(libs.ktor.client.mock)
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.9.0")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.0")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

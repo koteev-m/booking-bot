@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import com.github.kotlintelegrambot.TelegramApiException
 
-const val POINTS_PER_VISIT = 50
-
 /**
  * Loyalty points record.
  */
@@ -72,7 +70,9 @@ object LoyaltyRedemptionsTable : IntIdTable("loyalty_redemptions") {
     val createdAt = datetime("created_at").clientDefault { java.time.LocalDateTime.now() }
 }
 
-class LoyaltyRepositoryImpl : LoyaltyRepository {
+class LoyaltyRepositoryImpl(
+    private val pointsPerVisit: Int
+) : LoyaltyRepository {
     private val logger = LoggerFactory.getLogger(LoyaltyRepositoryImpl::class.java)
 
     override fun addVisit(chatId: Long) {
@@ -82,14 +82,14 @@ class LoyaltyRepositoryImpl : LoyaltyRepository {
                 if (existing == null) {
                     LoyaltyPointsTable.insert {
                         it[LoyaltyPointsTable.chatId] = chatId
-                        it[currentPoints] = POINTS_PER_VISIT
-                        it[lifetimePoints] = POINTS_PER_VISIT
+                        it[currentPoints] = pointsPerVisit
+                        it[lifetimePoints] = pointsPerVisit
                     }
                 } else {
                     LoyaltyPointsTable.update({ LoyaltyPointsTable.chatId eq chatId }) {
                         with(SqlExpressionBuilder) {
-                            it.update(currentPoints, currentPoints + POINTS_PER_VISIT)
-                            it.update(lifetimePoints, lifetimePoints + POINTS_PER_VISIT)
+                            it.update(currentPoints, currentPoints + pointsPerVisit)
+                            it.update(lifetimePoints, lifetimePoints + pointsPerVisit)
                         }
                     }
                 }

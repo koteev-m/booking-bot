@@ -16,7 +16,7 @@ import com.bookingbot.gateway.GuestDTO
 import com.bookingbot.gateway.RateLimitConfig
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.gateway.waitlist.WaitlistScheduler
-import java.time.Duration
+import com.bookingbot.gateway.ConfigProvider
 import org.koin.ktor.ext.get
 
 fun main() {
@@ -30,7 +30,7 @@ fun main() {
 
 fun Application.module() {
     configureDI()
-    val scheduler = WaitlistScheduler(get(), Duration.ofMinutes(1))
+    val scheduler = WaitlistScheduler(get(), ConfigProvider.botConfig.waitlist.periodMs)
     scheduler.start()
     configureAuth()
     val rateLimitConf = RateLimitConfig.load()

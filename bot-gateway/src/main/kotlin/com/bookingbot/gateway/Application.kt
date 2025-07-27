@@ -54,5 +54,6 @@ fun Application.module() {
         }
     }
     configureMetrics()
+    configureHealth()
     configureRouting()
 }

@@ -44,6 +44,9 @@ dependencies {
     implementation("io.ktor:ktor-server-rate-limit:3.2.2")
     implementation("io.ktor:ktor-server-request-validation:3.2.2")
     implementation(libs.java.jwt)
+    implementation("io.micrometer:micrometer-registry-prometheus:1.12.+")
+    implementation("io.ktor:ktor-server-micrometer:3.2.2")
+    implementation("com.github.zensum:ktor-health-check:0.2.0")
 
     // Koin
     implementation(libs.koin.ktor)

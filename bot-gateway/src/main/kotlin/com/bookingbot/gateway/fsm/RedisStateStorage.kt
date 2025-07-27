@@ -36,5 +36,7 @@ class RedisStateStorage(
         mutex.withLock { contexts.remove(chatId) }
     }
 
+    suspend fun ping(): String = connection.ping()
+
     fun close() = connection.close()
 }

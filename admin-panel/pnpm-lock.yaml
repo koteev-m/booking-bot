@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ant-design/plots':
-        specifier: ^2.6.1
-        version: 2.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^2.6.2
+        version: 2.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-query':
         specifier: ^5.83.0
         version: 5.83.0(react@19.1.0)
@@ -105,8 +105,8 @@ packages:
       react: '>=16.0.0'
       react-dom: '>=16.0.0'
 
-  '@ant-design/plots@2.6.1':
-    resolution: {integrity: sha512-X46qm2QcXJVV6hL+pcqtj9TsLEkOrow+uq7zDRQKbXWg9Um525GRnbF7PdaS89Rwoo3RdhrA3+T97VbQVYD0wQ==}
+  '@ant-design/plots@2.6.2':
+    resolution: {integrity: sha512-8OEIoMM5roAefe3ju7cQB8hrE+72o0BZ8S9HtwmtcoJh5Rgu7PeRx82RhGSfMikqo+ko6YWn2/GIgGOw0MQlYQ==}
     peerDependencies:
       react: '>=16.8.4'
       react-dom: '>=16.8.4'
@@ -1969,7 +1969,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  '@ant-design/plots@2.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@ant-design/plots@2.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@ant-design/charts-util': 0.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@antv/event-emitter': 0.1.3

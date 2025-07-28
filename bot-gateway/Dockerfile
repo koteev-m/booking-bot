@@ -12,7 +12,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/bot-gateway/build/libs/*.jar app.jar
 
-HEALTHCHECK --interval=15s CMD curl -f http://localhost:8080/healthz || exit 1
+HEALTHCHECK --interval=15s CMD curl -f http://localhost:8080/health || exit 1
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]

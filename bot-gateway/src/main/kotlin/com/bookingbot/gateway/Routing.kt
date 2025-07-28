@@ -11,6 +11,7 @@ import io.ktor.server.application.call
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.routing
 import com.bookingbot.gateway.Role
 import com.bookingbot.gateway.authorize
@@ -24,6 +25,7 @@ fun Application.configureRouting() {
     DatabaseFactory.init()
     routing {
         val service: BookingService by inject()
+        get("/health") { call.respondText("OK") }
 
         post("/booking") {
             val dto = call.receive<BookingRequest>()

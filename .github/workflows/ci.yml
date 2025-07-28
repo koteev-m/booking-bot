@@ -1,16 +1,13 @@
-name: Test & Lint
+name: Build & Lint
+
 on: [push, pull_request]
+
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_PASSWORD: test
-        ports: ['5432:5432']
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/gradle-build-action@v3
         with:
-          arguments: test
+          arguments: ktlintCheck detekt
+

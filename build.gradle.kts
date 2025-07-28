@@ -6,8 +6,8 @@ plugins {
     id("io.ktor.plugin") apply false
     id("com.github.ben-manes.versions") version "0.51.0"
     id("org.owasp.dependencycheck") version "9.2.0"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1" apply false
+    id("io.gitlab.arturbosch.detekt") version "1.23.6" apply false
 }
 
 dependencyCheck {
@@ -31,4 +31,32 @@ dependencies {
 }
 
 tasks.test { useJUnitPlatform() }
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        version.set("1.2.1")
+        reporters {
+            reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        }
+        enableExperimentalRules.set(true)
+        android.set(false)
+        filter { exclude("**/generated/**") }
+        additionalEditorconfig.set(mapOf("insert_final_newline" to "true"))
+    }
+
+    extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        config.setFrom(rootProject.file("detekt.yml"))
+        buildUponDefaultConfig = true
+        allRules = false
+        baseline = file("detekt-baseline.xml")
+    }
+
+
+    afterEvaluate {
+        tasks.named("check") { dependsOn("ktlintCheck", "detekt") }
+    }
+}
 

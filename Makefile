@@ -8,6 +8,6 @@ test: test-unit test-integration test-e2e
 
 run:   ; ./gradlew :bot-gateway:run
 
-lint:  ; ./gradlew ktlintCheck detekt
+lint: ; ./gradlew ktlintCheck detekt
 
-fmt:   ; ./gradlew ktlintFormat
+fmt:  ; ./gradlew ktlintFormat

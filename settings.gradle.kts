@@ -20,12 +20,9 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
-        maven("https://jitpack.io")
     }
     versionCatalogs {
-        create("libs") {
-            from(files("buildSrc/libs.versions.toml"))
-        }
+        create("libs")
     }
 }
 rootProject.name = "booking_bot"

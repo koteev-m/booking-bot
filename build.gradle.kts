@@ -10,6 +10,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.6" apply false
 }
 
+
 dependencyCheck {
     failBuildOnCVSS = 7.0F
     suppressionFile = "dependency-check-suppressions.xml"

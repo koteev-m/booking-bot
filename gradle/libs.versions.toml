@@ -1,6 +1,6 @@
 [versions]
 kotlin = "1.9.23"
-ktor = "2.3.+"
+ktor = "2.3.8"
 telegrambot = "6.1.0"
 coroutines = "1.7.3"
 exposed = "0.50.0"
@@ -9,20 +9,20 @@ postgres = "42.7.3"
 hikaricp = "5.0.1"
 config = "1.4.3"
 dotenv = "6.3.1"
-ktorPanel = "1.4.+"
 logback = "1.4.11"
-koin = "3.6.0"
+koin = "3.5.6"
 jwt = "4.4.0"
 h2 = "2.1.214"
 junit = "5.10.0"
 mockito = "5.9.0"
 mockitoKotlin = "5.2.1"
 wiremock = "3.3.1"
-lettuce = "6.3.3.RELEASE"
+lettuce = "6.3.2.RELEASE"
+caffeine = "3.1.8"
 serializationJson = "1.6.3"
 jedis = "5.2.0"
 embeddedRedis = "0.7.3"
-kotlinBackoff = "1.2.4"
+backoff = "1.2.4"
 
 [libraries]
 exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
@@ -40,7 +40,6 @@ dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "d
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
-ktor-panel = { module = "io.ktor-panel:ktor-panel", version.ref = "ktorPanel" }
 
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
@@ -55,7 +54,6 @@ wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wir
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
-koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 telegram-bot = { module = "io.github.kotlin-telegram-bot:kotlin-telegram-bot", version.ref = "telegrambot" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
@@ -76,8 +74,12 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
-lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }
 jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
 embedded-redis = { module = "it.ozimov:embedded-redis", version.ref = "embeddedRedis" }
-kotlin-backoff = { module = "io.github.reugn:kotlin-backoff", version.ref = "kotlinBackoff" }
+ktor-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-metrics = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
+koin-logger = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
+lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+backoff = { module = "io.github.reugn:kotlin-backoff", version.ref = "backoff" }

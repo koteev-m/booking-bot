@@ -37,11 +37,10 @@ dependencies {
     // dotenv
     implementation(libs.dotenv.kotlin)
 
-    // Ktor panel for admin UI
+    // Ktor server dependencies
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
-    implementation(libs.ktor.panel)
 
     // --- Тесты ---
     // Всё правильно, тестовые зависимости с `testImplementation`

@@ -1,0 +1,24 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 4 * * 6'
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/gradle-build-action@v3
+        with:
+          arguments: dependencyCheckAnalyze --info
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: build/reports/dependency-check-report.html

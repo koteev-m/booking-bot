@@ -17,3 +17,7 @@ Services expose Prometheus metrics at `/metrics` and logs in JSON. Grafana is av
 2. For production:
    docker secret create tg_token <(echo "$TELEGRAM_BOT_TOKEN")
    docker compose --env-file .env up -d
+
+## Security automation
+* Dependabot weekly PRs keep Gradle & npm deps up-to-date.
+* OWASP Dependency-Check runs on every PR + Saturday; build fails if CVSS ≥ 7.

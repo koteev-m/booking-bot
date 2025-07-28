@@ -19,7 +19,7 @@ dependencies {
     // --- unit ---
     testImplementation("io.mockk:mockk:1.13.9")
     testImplementation("io.kotest:kotest-assertions-core:5.8.1")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
     // --- integration ---
     testImplementation("io.ktor:ktor-server-test-host:2.3.+")

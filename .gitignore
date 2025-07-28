@@ -65,3 +65,6 @@ admin-panel/node_modules/
 !*.*        # keep normal files
 !*/         # keep directories
 **/?.?*     # ignore single-char files created by mistake
+detekt-baseline.xml
+!.editorconfig
+

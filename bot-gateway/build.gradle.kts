@@ -34,7 +34,7 @@ dependencies {
 
     // Ktor
     implementation(platform(libs.ktor.bom))
-    implementation(libs.ktor.server.core.jvm)
+    implementation(libs.ktor.server)
     implementation(libs.ktor.server.netty.jvm)
     implementation(libs.ktor.server.content.negotiation.jvm)
     implementation(libs.ktor.serialization.kotlinx.json.jvm)
@@ -46,12 +46,12 @@ dependencies {
     implementation(libs.java.jwt)
     implementation("io.micrometer:micrometer-registry-prometheus:1.12.+")
     implementation("io.micrometer:micrometer-core:1.13.0")
-    implementation("io.ktor:ktor-server-micrometer:3.2.2")
-    implementation("com.github.zensum:ktor-health-check:0.2.0")
+    implementation(libs.ktor.metrics)
+    implementation(libs.ktor.health)
 
     // Koin
     implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    implementation(libs.koin.logger)
     testImplementation(libs.koin.test)
 
     // Telegram Bot, без тянущихся артефактов Ktor
@@ -61,11 +61,12 @@ dependencies {
 
     // centralized logging backend
     implementation(libs.logback.classic)
-    implementation(libs.lettuce.core)
+    implementation(libs.lettuce)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.typesafe.config)
-    implementation(libs.kotlin.backoff)
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.6")
+    implementation(libs.backoff)
+    implementation(libs.caffeine)
+    implementation(libs.ktor.panel)
 
     // В H2 нам нужен только для тестов в этом модуле
     testImplementation(libs.h2)

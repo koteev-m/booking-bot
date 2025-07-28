@@ -12,7 +12,7 @@ plugins {
 
 dependencyCheck {
     failBuildOnCVSS = 7.0F
-    suppressionFiles = listOf("dependency-check-suppressions.xml")
+    suppressionFile = "dependency-check-suppressions.xml"
 }
 
 dependencies {
@@ -31,6 +31,8 @@ dependencies {
 }
 
 tasks.test { useJUnitPlatform() }
+
+tasks.named("check") { dependsOn("dependencyCheckAnalyze") }
 
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")

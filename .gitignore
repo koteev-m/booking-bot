@@ -68,3 +68,5 @@ admin-panel/node_modules/
 detekt-baseline.xml
 !.editorconfig
 
+# OWASP reports
+dependency-check-report.*

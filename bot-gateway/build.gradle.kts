@@ -53,10 +53,8 @@ dependencies {
     implementation(libs.koin.logger)
     testImplementation(libs.koin.test)
 
-    // Telegram Bot, без тянущихся артефактов Ktor
-    implementation(libs.telegram.bot) {
-        exclude(group = "io.ktor")
-    }
+    // Telegram Bot
+    implementation(libs.telegram.bot)
 
     // centralized logging backend
     implementation(libs.logback.classic)

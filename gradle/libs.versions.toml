@@ -1,7 +1,7 @@
 [versions]
 kotlin = "1.9.23"
 ktor = "2.3.8"
-telegram = "6.3.0"
+telegram = "6.1.0"
 coroutines = "1.7.3"
 exposed = "0.50.0"
 flyway = "10.14.0"
@@ -55,7 +55,7 @@ h2 = { module = "com.h2database:h2", version.ref = "h2" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
-telegram-bot = { module = "com.github.kotlin-telegram-bot:kotlin-telegram-bot", version.ref = "telegram" }
+telegram-bot = { module = "io.github.kotlintelegrambot:telegram", version.ref = "telegram" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "coroutines" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
@@ -82,4 +82,4 @@ ktor-metrics = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref 
 koin-logger = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
-backoff = { module = "io.github.reugn:kotlin-backoff-coroutines", version.ref = "backoff" }
+backoff = { module = "com.github.reugn:kotlin-backoff-coroutines", version.ref = "backoff" }

@@ -10,10 +10,6 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.6" apply false
 }
 
-repositories {
-    mavenCentral()
-}
-
 
 dependencyCheck {
     failBuildOnCVSS = 7.0F

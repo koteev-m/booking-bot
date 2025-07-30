@@ -86,7 +86,7 @@ dependencies {
     testImplementation(libs.kotlin.test.junit5) // Явно указал версию для стабильности
     testImplementation(libs.ktor.client.mock)
     testImplementation("io.mockk:mockk:1.13.9")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation(libs.coroutines.test)
     testImplementation("io.kotest:kotest-runner-junit5-jvm:5.9.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.0")
 }

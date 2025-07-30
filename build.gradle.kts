@@ -20,7 +20,7 @@ dependencies {
     // --- unit ---
     testImplementation("io.mockk:mockk:1.13.9")
     testImplementation("io.kotest:kotest-assertions-core:5.8.1")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation(libs.coroutines.test)
 
     // --- integration ---
     testImplementation("io.ktor:ktor-server-test-host:2.3.+")
@@ -28,7 +28,7 @@ dependencies {
     testImplementation("com.h2database:h2:2.2.224")
 
     // --- E2E ---
-    testImplementation("com.github.tomakehurst:wiremock-jre8:3.3.1")
+    testImplementation(libs.wiremock)
 }
 
 tasks.test { useJUnitPlatform() }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.api.tasks.bundling.Zip // <<< ИСПРАВЛЕНО: импортируем правильный класс Zip
 import org.gradle.api.file.DuplicatesStrategy
@@ -114,3 +115,64 @@ tasks.named<Zip>("distZip") { // <<< ИСПРАВЛЕНО: используем 
 tasks.named<Tar>("distTar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+=======
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+    // Просто применяем плагины. Версии и конфигурация управляются централизованно.
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktor)
+    id("com.github.johnrengelman.shadow")
+}
+
+application {
+    mainClass.set("io.ktor.server.netty.EngineMain")
+}
+
+dependencies {
+    implementation(project(":booking-api"))
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.logback.classic)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.telegram.bot)
+    implementation(libs.backoff)
+    implementation(libs.kotlin.logging)
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
+    implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json.client)
+    implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.jedis)
+    implementation(libs.google.zxing.core)
+    implementation(libs.google.zxing.javase)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.ktor.server.cors)
+    testImplementation(libs.ktor.server.tests)
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.strikt.core)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.junit.jupiter)
+}
+
+tasks {
+    withType<ShadowJar> {
+        archiveBaseName.set("booking-bot")
+        archiveClassifier.set("")
+        archiveVersion.set("1.0-SNAPSHOT")
+        manifest {
+            attributes(mapOf("Main-Class" to "com.bookingbot.gateway.ApplicationKt"))
+        }
+    }
+}
+>>>>>>> 884cda7 (add ch)

@@ -23,7 +23,7 @@ dependencies {
     testImplementation(libs.coroutines.test)
 
     // --- integration ---
-    testImplementation("io.ktor:ktor-server-test-host:2.3.+")
+    testImplementation("io.ktor:ktor-server-test-host:3.2.+")
     testImplementation("org.testcontainers:postgresql:1.19.1")
     testImplementation("com.h2database:h2:2.2.224")
 

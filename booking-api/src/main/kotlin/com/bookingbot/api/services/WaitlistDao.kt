@@ -3,6 +3,7 @@ package com.bookingbot.api.services
 import com.bookingbot.api.model.waitlist.WaitEntry
 import com.bookingbot.api.tables.WaitlistTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /** DAO for waiting_list operations. */

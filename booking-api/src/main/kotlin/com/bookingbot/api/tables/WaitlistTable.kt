@@ -1,8 +1,5 @@
 package com.bookingbot.api.tables
 
-
-import jdk.jfr.internal.event.EventConfiguration.timestamp
-
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp
@@ -12,5 +9,6 @@ object WaitlistTable : IntIdTable("waiting_list") {
     val desiredTime = timestamp("desired_time")
     val preferredTable = integer("preferred_table").nullable()
     val status = varchar("status", 20).default("ACTIVE")
-    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp())
 }
+

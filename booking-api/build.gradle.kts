@@ -1,103 +1,49 @@
-<<<<<<< HEAD
-// booking-api/build.gradle.kts
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.serialization") // Для JSON
-    `java-library` // Этот модуль — библиотека, поэтому `java-library` подходит лучше
+    id("org.jetbrains.kotlin.plugin.serialization")
+    `java-library`
 }
-
-// group и version теперь в корневом build.gradle.kts
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
-// repositories не нужен, наследуется из settings.gradle.kts
 
 dependencies {
-    // --- Exposed BOM + модули Exposed ---
-    // Отличный подход — использовать BOM
-    implementation(platform(libs.exposed.bom))
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.java.time)
+    // Exposed ORM
+    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-java-time:0.41.1")
 
-    // Flyway + Postgres
-    implementation(libs.flyway.core)
-    runtimeOnly(libs.postgresql) // Драйвер БД лучше подключать как runtimeOnly
+    // Database drivers and utilities
+    implementation("org.postgresql:postgresql:42.5.0")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.flywaydb:flyway-core:9.19.1")
+    implementation("com.typesafe:config:1.4.3")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
-    // HikariCP и конфигурация
-    implementation(libs.hikaricp)
-    implementation(libs.typesafe.config)
+    // Ktor server and metrics
+    implementation("io.ktor:ktor-server-core:2.3.0")
+    implementation("io.ktor:ktor-server-netty:2.3.0")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
+    implementation("io.ktor:ktor-server-auth:2.3.0")
+    implementation("io.ktor:ktor-server-cors:2.3.0")
+    implementation("io.ktor:ktor-server-status-pages:2.3.0")
+    implementation("io.ktor:ktor-server-metrics-micrometer:2.3.0")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.11.0")
+    implementation("ch.qos.logback:logback-classic:1.4.7")
 
-    // dotenv
-    implementation(libs.dotenv.kotlin)
+    // Dependency injection
+    implementation("io.insert-koin:koin-ktor:3.4.0")
+    implementation("io.insert-koin:koin-logger-slf4j:3.4.0")
 
-    // Ktor server dependencies
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.server.auth)
-
-    // --- Тесты ---
-    // Всё правильно, тестовые зависимости с `testImplementation`
-    testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.kotlin.test.junit5)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.h2) // H2 только для тестов
+    // Test dependencies
+    testImplementation("io.ktor:ktor-server-tests:2.3.0")
+    testImplementation(kotlin("test"))
+    testImplementation("org.testcontainers:postgresql:1.18.1")
+    testImplementation("org.testcontainers:junit-jupiter:1.18.1")
+    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("com.h2database:h2:2.1.214")
 }
 
-// Настройка компилятора Kotlin
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        // jvmTarget не нужен, он берётся из toolchain
-        freeCompilerArgs.add("-Xjsr305=strict")
-    }
-}
-
-// Настройка тестов
 tasks.test {
     useJUnitPlatform()
 }
-=======
-plugins {
-    // Просто применяем плагины. Версии и конфигурация управляются централизованно.
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.ktor)
-    alias(libs.plugins.kotlin.serialization)
-}
 
-application {
-    mainClass.set("com.bookingbot.api.ApplicationKt")
-}
-
-dependencies {
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.logback.classic)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.postgresql)
-    implementation(libs.h2)
-    implementation(libs.hikariCP)
-    implementation(libs.flyway.core)
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
-    implementation(libs.micrometer.registry.prometheus)
-    implementation(libs.ktor.server.metrics.micrometer)
-    implementation(libs.ktor.server.cors)
-    implementation(libs.ktor.server.status.pages)
-    testImplementation(libs.ktor.server.tests)
-    testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.testcontainers.postgresql)
-    testImplementation(libs.testcontainers.junit.jupiter)
-    testImplementation(libs.mockk)
-}
->>>>>>> 884cda7 (add ch)

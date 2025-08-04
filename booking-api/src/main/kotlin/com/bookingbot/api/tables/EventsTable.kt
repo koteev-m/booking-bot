@@ -1,7 +1,7 @@
 package com.bookingbot.api.tables
 
-import jdk.jfr.internal.event.EventConfiguration.timestamp
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp
 
 object EventsTable : IntIdTable("events") {
@@ -10,5 +10,6 @@ object EventsTable : IntIdTable("events") {
     val description = text("description").nullable()
     val eventDate = timestamp("event_date")
     val imageUrl = varchar("image_url", 512).nullable()
-    val createdAt = timestamp("created_at")
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp())
 }
+

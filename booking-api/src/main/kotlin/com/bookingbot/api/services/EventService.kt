@@ -3,7 +3,9 @@ package com.bookingbot.api.services
 import com.bookingbot.api.model.Event
 import com.bookingbot.api.tables.EventsTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
@@ -11,14 +13,20 @@ class EventService {
     /**
      * Создает новое событие/афишу для клуба.
      */
-    fun createEvent(clubId: Int, title: String, description: String?, eventDate: Instant, imageUrl: String?): Event = transaction {
+    fun createEvent(
+        clubId: Int,
+        title: String,
+        description: String?,
+        eventDate: Instant,
+        imageUrl: String?
+    ): Event = transaction {
         val id = EventsTable.insertAndGetId {
             it[EventsTable.clubId] = clubId
             it[EventsTable.title] = title
             it[EventsTable.description] = description
             it[EventsTable.eventDate] = eventDate
             it[EventsTable.imageUrl] = imageUrl
-            it[createdAt] = Instant.now()
+            it[EventsTable.createdAt] = Instant.now()
         }
         findEventById(id.value)!!
     }
@@ -46,3 +54,4 @@ class EventService {
         imageUrl = this[EventsTable.imageUrl]
     )
 }
+

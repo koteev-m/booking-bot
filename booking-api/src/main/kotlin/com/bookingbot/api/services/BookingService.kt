@@ -4,10 +4,12 @@ import com.bookingbot.api.model.booking.Booking
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.api.model.PromoterStats
 import com.bookingbot.api.tables.BookingsTable
+import com.bookingbot.api.tables.PromoterStatsTable
 import com.bookingbot.api.tables.TablesTable
 import com.bookingbot.api.services.WaitlistNotifierHolder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.math.BigDecimal
 
@@ -139,10 +141,22 @@ class BookingService {
             it[status] = "CONFIRMED"
         }
         val promoterId = row[BookingsTable.promoterId]
-        val depositPerGuest = TablesTable.select { TablesTable.id eq row[BookingsTable.tableId] }
-            .single()[TablesTable.minDeposit]
-        val totalDeposit = depositPerGuest.multiply(BigDecimal(row[BookingsTable.partySize]))
-        PromoterStats.increase(promoterId, totalDeposit)
+        if (promoterId != null) {
+            val depositPerGuest = TablesTable.select { TablesTable.id eq row[BookingsTable.tableId] }
+                .single()[TablesTable.minDeposit]
+            val totalDeposit = depositPerGuest.multiply(BigDecimal(row[BookingsTable.partySize]))
+            val updated = PromoterStatsTable.update({ PromoterStatsTable.promoterId eq promoterId }) {
+                it[PromoterStatsTable.visits] = with(SqlExpressionBuilder) { PromoterStatsTable.visits + 1 }
+                it[PromoterStatsTable.totalDeposit] = with(SqlExpressionBuilder) { PromoterStatsTable.totalDeposit + totalDeposit }
+            }
+            if (updated == 0) {
+                PromoterStatsTable.insert {
+                    it[PromoterStatsTable.promoterId] = promoterId
+                    it[PromoterStatsTable.visits] = 1
+                    it[PromoterStatsTable.totalDeposit] = totalDeposit
+                }
+            }
+        }
     }
 
     /**
@@ -180,15 +194,10 @@ class BookingService {
      * гостей и суммарный депозит по его броням.
      */
     fun getPromoterStats(promoterId: Long): PromoterStats = transaction {
-        val rows = (BookingsTable innerJoin TablesTable)
-            .select { BookingsTable.promoterId eq promoterId }
-            .map { it[BookingsTable.partySize] to it[TablesTable.minDeposit] }
-
-        val totalGuests = rows.sumOf { it.first }
-        val totalDeposit = rows.fold(BigDecimal.ZERO) { acc, (size, deposit) ->
-            acc + deposit.multiply(BigDecimal(size))
-        }
-        PromoterStats(promoterId, totalGuests, totalDeposit)
+        val row = PromoterStatsTable.select { PromoterStatsTable.promoterId eq promoterId }.singleOrNull()
+        val guests = row?.get(PromoterStatsTable.visits) ?: 0
+        val deposit = row?.get(PromoterStatsTable.totalDeposit) ?: BigDecimal.ZERO
+        PromoterStats(promoterId, guests, deposit)
     }
 }
 

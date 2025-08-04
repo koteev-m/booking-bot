@@ -4,13 +4,11 @@ import com.bookingbot.api.tables.BookingsTable
 import com.bookingbot.api.tables.TablesTable
 import java.time.LocalDateTime
 import java.time.ZoneId
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.and
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.join
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**

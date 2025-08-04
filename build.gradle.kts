@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // build.gradle.kts (root)
 
 plugins {
@@ -63,3 +64,18 @@ subprojects {
     }
 }
 
+=======
+plugins {
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ktor) apply false
+    alias(libs.plugins.detekt)
+    // Централизованно объявляем Shadow plugin
+    id("com.github.johnrengelman.shadow") version "7.1.2" apply false
+}
+
+allprojects {
+    group = "com.booking-bot"
+    version = "1.0-SNAPSHOT"
+}
+>>>>>>> 884cda7 (add ch)

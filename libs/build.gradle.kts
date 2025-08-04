@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // libs/build.gradle.kts
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
@@ -24,3 +25,8 @@ dependencies {
     //
     // Тогда во всех зависимых модулях они будут доступны автоматически.
 }
+=======
+plugins {
+    `kotlin-dsl`
+}
+>>>>>>> 884cda7 (add ch)

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // booking-api/build.gradle.kts
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
@@ -62,3 +63,41 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 tasks.test {
     useJUnitPlatform()
 }
+=======
+plugins {
+    // Просто применяем плагины. Версии и конфигурация управляются централизованно.
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.ktor)
+    alias(libs.plugins.kotlin.serialization)
+}
+
+application {
+    mainClass.set("com.bookingbot.api.ApplicationKt")
+}
+
+dependencies {
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.logback.classic)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.postgresql)
+    implementation(libs.h2)
+    implementation(libs.hikariCP)
+    implementation(libs.flyway.core)
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
+    implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.status.pages)
+    testImplementation(libs.ktor.server.tests)
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.mockk)
+}
+>>>>>>> 884cda7 (add ch)

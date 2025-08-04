@@ -1,4 +1,5 @@
 pluginManagement {
+<<<<<<< HEAD
     val props = java.util.Properties().apply {
         file("gradle.properties").inputStream().use { load(it) }
     }
@@ -18,13 +19,34 @@ pluginManagement {
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+=======
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+>>>>>>> 884cda7 (add ch)
     repositories {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
     }
+<<<<<<< HEAD
     versionCatalogs {
         create("libs")
     }
 }
 rootProject.name = "booking_bot"
 include("booking-api", "bot-gateway", "bot-gateway-e2e", "libs")
+=======
+}
+
+rootProject.name = "booking-bot"
+include("booking-api")
+include("bot-gateway")
+include("bot-gateway-e2e")
+include("libs")
+include("admin-panel")
+>>>>>>> 884cda7 (add ch)

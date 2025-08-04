@@ -1,8 +1,13 @@
 package com.bookingbot.api
 
 import com.bookingbot.api.tables.BookingsTable
+import com.bookingbot.api.tables.ClubStaffTable
+import com.bookingbot.api.tables.ClubsTable
+import com.bookingbot.api.tables.EventsTable
+import com.bookingbot.api.tables.PromoterStatsTable
+import com.bookingbot.api.tables.TablesTable
+import com.bookingbot.api.tables.UsersTable
 import com.bookingbot.api.tables.WaitlistTable
-import com.bookingbot.api.PromoterStatsTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.typesafe.config.ConfigFactory
@@ -60,7 +65,16 @@ object DatabaseFactory {
         // Для H2 in-memory создаём схему через Exposed
         if (url.startsWith("jdbc:h2")) {
             transaction {
-                SchemaUtils.create(BookingsTable, WaitlistTable, PromoterStatsTable)
+                SchemaUtils.create(
+                    UsersTable,
+                    ClubsTable,
+                    ClubStaffTable,
+                    TablesTable,
+                    BookingsTable,
+                    EventsTable,
+                    WaitlistTable,
+                    PromoterStatsTable
+                )
             }
         }
     }

@@ -1,9 +1,8 @@
 package com.bookingbot.api.tables
 
-<<<<<<< HEAD
-=======
+
 import jdk.jfr.internal.event.EventConfiguration.timestamp
->>>>>>> 884cda7 (add ch)
+
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp

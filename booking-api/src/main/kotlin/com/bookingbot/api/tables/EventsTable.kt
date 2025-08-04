@@ -1,5 +1,6 @@
 package com.bookingbot.api.tables
 
+import jdk.jfr.internal.event.EventConfiguration.timestamp
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.javatime.timestamp
 

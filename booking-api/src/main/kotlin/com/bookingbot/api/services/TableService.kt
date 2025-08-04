@@ -35,7 +35,7 @@ class TableService {
         val operationalNightEnd = localBookingDate.plusDays(1).atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant()
 
         // 3. Находим ID всех столов, которые уже забронированы на эту ночь
-        val bookedTableIds = BookingsTable
+        val bookedTableIds: Set<Int> = BookingsTable
             .select {
                 (BookingsTable.clubId eq clubId) and
                         (BookingsTable.status inList listOf("PENDING", "SEATED")) and
@@ -93,7 +93,7 @@ class TableService {
      * Calculates deposit amount for given table and guest count.
      */
     fun calculateDeposit(tableId: Int, guestCount: Int): BigDecimal = transaction {
-        val depositPerGuest = TablesTable
+        val depositPerGuest: BigDecimal = TablesTable
             .select { TablesTable.id eq tableId }
             .map { it[TablesTable.minDeposit] }
             .singleOrNull() ?: BigDecimal.ZERO

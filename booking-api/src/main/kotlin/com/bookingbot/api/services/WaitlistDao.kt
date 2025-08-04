@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /** DAO for waiting_list operations. */
 object WaitlistDao {
     fun addEntry(chatId: Long, desiredTime: java.time.Instant, preferredTable: Int?): WaitEntry = transaction {
-        val id = WaitlistTable.insertAndGetId {
+        val id: Int = WaitlistTable.insertAndGetId {
             it[WaitlistTable.chatId] = chatId
             it[WaitlistTable.desiredTime] = desiredTime
             it[WaitlistTable.preferredTable] = preferredTable
@@ -18,15 +18,17 @@ object WaitlistDao {
     }
 
     fun getEntry(id: Int): WaitEntry? = transaction {
-        WaitlistTable.select { WaitlistTable.id eq id }
+        val entry: WaitEntry? = WaitlistTable.select { WaitlistTable.id eq id }
             .map { it.toWaitEntry() }
             .singleOrNull()
+        entry
     }
 
     fun findActive(): List<WaitEntry> = transaction {
-        WaitlistTable
+        val entries: List<WaitEntry> = WaitlistTable
             .select { WaitlistTable.status eq "ACTIVE" }
             .map { it.toWaitEntry() }
+        entries
     }
 
     fun updateStatus(id: Int, status: String) = transaction {

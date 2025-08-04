@@ -4,6 +4,7 @@ import com.bookingbot.api.tables.BookingsTable
 import com.bookingbot.api.tables.TablesTable
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -27,22 +28,27 @@ object BookingRepository {
         val end = desiredTime.plusHours(2).atZone(ZoneId.systemDefault()).toInstant()
 
         val cnt = BookingsTable.id.count()
+        val tableIdColumn: Column<EntityID<Int>> = TablesTable.id
 
-        TablesTable
+        val availability: Map<Int, Boolean> = TablesTable
             .join(
                 BookingsTable,
                 JoinType.LEFT,
                 additionalConstraint = {
-                    (BookingsTable.tableId eq TablesTable.id) and
+                    (BookingsTable.tableId eq tableIdColumn) and
                         (BookingsTable.bookingTime greaterEq start) and
                         (BookingsTable.bookingTime lessEq end) and
                         (BookingsTable.status inList listOf("PENDING", "SEATED"))
                 }
             )
-            .slice(TablesTable.id, cnt)
+            .slice(tableIdColumn, cnt)
             .selectAll()
-            .groupBy(TablesTable.id)
-            .associate { it[TablesTable.id].value to (it[cnt] == 0L) }
+            .groupBy(tableIdColumn)
+            .associate { row ->
+                val tableId: Int = row[tableIdColumn].value
+                tableId to (row[cnt] == 0L)
+            }
+        availability
     }
 }
 

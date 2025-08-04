@@ -35,15 +35,13 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:3.4.0")
 
     // Test dependencies
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.ktor:ktor-server-tests:2.3.0")
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
     testImplementation("org.testcontainers:postgresql:1.18.1")
     testImplementation("org.testcontainers:junit-jupiter:1.18.1")
     testImplementation("io.mockk:mockk:1.13.5")
     testImplementation("com.h2database:h2:2.1.214")
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 

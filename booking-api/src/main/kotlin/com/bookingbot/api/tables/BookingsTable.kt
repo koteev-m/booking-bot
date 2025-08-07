@@ -15,7 +15,7 @@ object BookingsTable : IntIdTable("bookings") {
     val telegramId = long("telegram_id").nullable()
     val phone = varchar("phone", 20).nullable()
     val status = varchar("status", 20).default("PENDING")
-    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp())
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val promoterId = long("promoter_id").references(UsersTable.telegramId).nullable()
     val bookingSource = varchar("booking_source", 100).default("Бот")
 }

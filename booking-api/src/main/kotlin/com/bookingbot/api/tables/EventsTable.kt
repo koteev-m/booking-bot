@@ -10,6 +10,6 @@ object EventsTable : IntIdTable("events") {
     val description = text("description").nullable()
     val eventDate = timestamp("event_date")
     val imageUrl = varchar("image_url", 512).nullable()
-    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp())
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 }
 

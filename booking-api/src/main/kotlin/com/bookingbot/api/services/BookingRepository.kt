@@ -28,24 +28,28 @@ object BookingRepository {
         val end = desiredTime.plusHours(2).atZone(ZoneId.systemDefault()).toInstant()
 
         val cnt = BookingsTable.id.count()
-        val tableIdColumn: Column<EntityID<Int>> = TablesTable.id
+        // Переменная tableIdColumn больше не нужна
 
         val availability: Map<Int, Boolean> = TablesTable
             .join(
                 BookingsTable,
                 JoinType.LEFT,
+                // ПРАВИЛЬНО: Указываем условие соединения здесь:
+                onColumn = TablesTable.id,
+                otherColumn = BookingsTable.tableId,
                 additionalConstraint = {
-                    (BookingsTable.tableId eq tableIdColumn) and
-                        (BookingsTable.bookingTime greaterEq start) and
+                    // Оставляем здесь только фильтры (время и статус):
+                    (BookingsTable.bookingTime greaterEq start) and
                         (BookingsTable.bookingTime lessEq end) and
                         (BookingsTable.status inList listOf("PENDING", "SEATED"))
                 }
             )
-            .slice(tableIdColumn, cnt)
+            // Используем TablesTable.id напрямую
+            .slice(TablesTable.id, cnt)
             .selectAll()
-            .groupBy(tableIdColumn)
+            .groupBy(TablesTable.id)
             .associate { row ->
-                val tableId: Int = row[tableIdColumn].value
+                val tableId: Int = row[TablesTable.id].value
                 tableId to (row[cnt] == 0L)
             }
         availability

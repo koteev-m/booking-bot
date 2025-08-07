@@ -18,6 +18,7 @@ import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.gateway.waitlist.WaitlistScheduler
 import com.bookingbot.gateway.ConfigProvider
 import org.koin.ktor.ext.get
+import sun.security.util.KeyUtil.validate
 
 fun main() {
     embeddedServer(

@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-#!/usr/bin/env bash
-set -e
-./gradlew clean build --refresh-dependencies --info
-=======
 #!/bin/bash
 
 # Цвета для вывода
@@ -30,7 +25,7 @@ pluginManagement {
         kotlin("jvm") version kotlinVersion
         id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion
         id("io.ktor.plugin") version ktorVersion
-        id("com.github.johnrengelman.shadow") version "8.1.1"
+
     }
 }
 
@@ -153,4 +148,3 @@ if [ $? -eq 0 ]; then
 else
     echo -e "${RED}❌ Сборка завершилась с ошибкой. Пожалуйста, проверьте лог выше.${NC}"
 fi
->>>>>>> 884cda7 (add ch)

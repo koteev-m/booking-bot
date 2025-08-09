@@ -15,6 +15,9 @@ object CallbackData {
     const val PROMOTER_ADD_GUEST = "promoter_add_guest"
     const val PROMOTER_GUESTLIST_CLUB_PREFIX = "promoter_guestlist_club_"
 
+    const val ENTRANCE_GUESTS = "entrance_guests"
+    const val ENTRANCE_CHECKIN_PREFIX = "entrance_checkin_"
+
     const val BROADCAST_CONFIRM_SEND = "broadcast_confirm_send"
     const val BROADCAST_CANCEL = "broadcast_cancel"
 

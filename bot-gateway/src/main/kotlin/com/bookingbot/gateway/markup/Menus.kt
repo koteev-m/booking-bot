@@ -51,4 +51,14 @@ object Menus {
             )
         )
     }
+
+    fun entranceManagerMenu(): InlineKeyboardMarkup {
+        return InlineKeyboardMarkup.create(
+            listOf(
+                listOf(InlineKeyboardButton.CallbackData(text = "Список гостей", callbackData = CallbackData.ENTRANCE_GUESTS)),
+                listOf(InlineKeyboardButton.CallbackData(text = "Бронь для гостя", callbackData = CallbackData.PROMOTER_START_BOOKING)),
+                listOf(backToMainMenuButton)
+            )
+        )
+    }
 }

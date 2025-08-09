@@ -93,6 +93,7 @@ object Bot {
             addAskQuestionHandler(this, clubService)
             addAdminHandlers(this, userService, clubService)
             addPromoterHandlers(this, userService, clubService, guestListService)
+            addEntranceManagerHandlers(this, userService, guestListService)
             addAdminActionHandler(this, bookingService, clubService)
             addContentHandlers(this)
             addTablesHandler(this, bookingService)

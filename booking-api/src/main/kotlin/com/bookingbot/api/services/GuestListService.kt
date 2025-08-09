@@ -4,6 +4,7 @@ import com.bookingbot.api.model.GuestListEntry
 import com.bookingbot.api.tables.GuestListTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class GuestListService(private val clubService: ClubService) {
@@ -28,8 +29,15 @@ class GuestListService(private val clubService: ClubService) {
                 clubId = it[GuestListTable.clubId],
                 promoterId = it[GuestListTable.promoterId],
                 firstName = it[GuestListTable.firstName],
-                lastName = it[GuestListTable.lastName]
+                lastName = it[GuestListTable.lastName],
+                checkedIn = it[GuestListTable.checkedIn]
             )
         }
+    }
+
+    fun checkInGuest(guestId: Int): Boolean = transaction {
+        GuestListTable.update({ GuestListTable.id eq guestId }) {
+            it[checkedIn] = true
+        } > 0
     }
 }

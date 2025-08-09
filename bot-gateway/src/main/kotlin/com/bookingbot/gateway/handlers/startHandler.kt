@@ -17,7 +17,7 @@ fun addStartHandler(dispatcher: Dispatcher, userService: UserService) {
             UserRole.PROMOTER -> "Панель промоутера. Выберите действие:" to Menus.promoterMenu()
             UserRole.ADMIN -> "Панель администратора. Выберите действие:" to Menus.adminMenu()
             UserRole.OWNER -> "Панель владельца. Выберите действие:" to Menus.adminMenu() // Владелец пока использует меню админа
-            UserRole.ENTRANCE_MANAGER -> "Панель менеджера входа. Выберите действие:" to Menus.adminMenu()
+            UserRole.ENTRANCE_MANAGER -> "Панель менеджера входа. Выберите действие:" to Menus.entranceManagerMenu()
         }
 
         TelegramApi.sendMessage(

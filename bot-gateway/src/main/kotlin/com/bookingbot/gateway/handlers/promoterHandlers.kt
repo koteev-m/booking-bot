@@ -25,7 +25,7 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
         val promoter = userService.findOrCreateUser(promoterId, callbackQuery.from.username)
 
         // Проверяем, что у пользователя роль промоутера
-        if (promoter.role != UserRole.PROMOTER && promoter.role != UserRole.OWNER) {
+        if (promoter.role != UserRole.PROMOTER && promoter.role != UserRole.OWNER && promoter.role != UserRole.ENTRANCE_MANAGER) {
             bot.answerCallbackQuery(callbackQuery.id, text = "Эта функция доступна только для промоутеров.", showAlert = true)
             return@callbackQuery
         }

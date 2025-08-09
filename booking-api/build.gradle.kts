@@ -31,5 +31,5 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.mockk:mockk:1.13.9")
-    testImplementation("com.h2database:h2:2.1.214")
+    testImplementation("com.h2database:h2:2.3.232")
 }

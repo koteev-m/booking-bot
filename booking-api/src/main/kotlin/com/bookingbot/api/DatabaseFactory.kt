@@ -8,6 +8,7 @@ import com.bookingbot.api.tables.PromoterStatsTable
 import com.bookingbot.api.tables.TablesTable
 import com.bookingbot.api.tables.UsersTable
 import com.bookingbot.api.tables.WaitlistTable
+import com.bookingbot.api.tables.GuestListTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.typesafe.config.ConfigFactory
@@ -73,7 +74,8 @@ object DatabaseFactory {
                     BookingsTable,
                     EventsTable,
                     WaitlistTable,
-                    PromoterStatsTable
+                    PromoterStatsTable,
+                    GuestListTable
                 )
             }
         }
@@ -91,7 +93,8 @@ object DatabaseFactory {
             "tables",
             "promoters",
             "waiting_list",
-            "loyalty_points"
+            "loyalty_points",
+            "guest_list"
         )
         require(tableName in allowedTables) { "Unknown table: $tableName" }
         return transaction {

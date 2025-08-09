@@ -15,6 +15,7 @@ sealed class State(val key: String) {
 
     // Состояния для промоутера
     object PromoterGuestNameInput : State("promoter_guest_name_input")
+    object PromoterGuestListNameInput : State("promoter_guestlist_name_input")
 
     // Состояния для админа
     object AdminBookingGuestName : State("admin_booking_guest_name")

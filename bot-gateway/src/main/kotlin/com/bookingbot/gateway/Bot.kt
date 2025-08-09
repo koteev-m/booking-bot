@@ -5,6 +5,7 @@ import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.TableService
 import com.bookingbot.api.services.UserService
 import com.bookingbot.api.services.EventService
+import com.bookingbot.api.services.GuestListService
 import com.bookingbot.gateway.waitlist.addWaitlistHandlers
 import com.bookingbot.gateway.handlers.*
 import com.github.kotlintelegrambot.bot
@@ -78,6 +79,7 @@ object Bot {
     private val tableService = TableService()
     private val bookingService = BookingService()
     private val eventService = EventService()
+    private val guestListService = GuestListService(clubService)
 
     // --- Создание экземпляра бота ---
     val instance = bot {
@@ -90,7 +92,7 @@ object Bot {
             addClubInfoHandler(this, clubService, tableService, eventService)
             addAskQuestionHandler(this, clubService)
             addAdminHandlers(this, userService, clubService)
-            addPromoterHandlers(this, userService, clubService)
+            addPromoterHandlers(this, userService, clubService, guestListService)
             addAdminActionHandler(this, bookingService, clubService)
             addContentHandlers(this)
             addTablesHandler(this, bookingService)

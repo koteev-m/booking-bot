@@ -1,7 +1,7 @@
 package com.bookingbot.api.model
 
 enum class UserRole {
-    GUEST, PROMOTER, ADMIN, OWNER
+    GUEST, PROMOTER, ADMIN, OWNER, ENTRANCE_MANAGER
 }
 
 data class User(

@@ -55,12 +55,24 @@ class ClubService {
     }
 
     /**
+     * Включает/отключает список гостей и задаёт максимальное количество гостей.
+     */
+    fun setGuestList(clubId: Int, enabled: Boolean, maxGuests: Int?): Boolean = transaction {
+        ClubsTable.update({ ClubsTable.id eq clubId }) {
+            it[hasGuestList] = enabled
+            it[maxGuestListSize] = maxGuests
+        } > 0
+    }
+
+    /**
      * Приватная функция-расширение для конвертации строки из базы данных (ResultRow) в объект Club.
      */
     private fun ResultRow.toClub(): Club = Club(
         id = this[ClubsTable.id].value,
         name = this[ClubsTable.name],
         description = this[ClubsTable.description] ?: "",
-        adminChannelId = this[ClubsTable.adminChannelId]
+        adminChannelId = this[ClubsTable.adminChannelId],
+        hasGuestList = this[ClubsTable.hasGuestList],
+        maxGuestListSize = this[ClubsTable.maxGuestListSize]
     )
 }

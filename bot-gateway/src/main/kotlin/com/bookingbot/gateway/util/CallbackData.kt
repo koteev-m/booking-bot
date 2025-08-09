@@ -12,6 +12,8 @@ object CallbackData {
     const val ADMIN_CREATE_BROADCAST = "admin_create_broadcast"
     const val PROMOTER_START_BOOKING = "promoter_start_booking"
     const val PROMOTER_MY_BOOKINGS = "promoter_my_bookings"
+    const val PROMOTER_ADD_GUEST = "promoter_add_guest"
+    const val PROMOTER_GUESTLIST_CLUB_PREFIX = "promoter_guestlist_club_"
 
     const val BROADCAST_CONFIRM_SEND = "broadcast_confirm_send"
     const val BROADCAST_CANCEL = "broadcast_cancel"

@@ -50,7 +50,7 @@ class UserService {
      */
     fun assignUserToClub(userId: Long, clubId: Int, role: UserRole): Boolean {
         // Убеждаемся, что роль соответствует персоналу
-        if (role != UserRole.ADMIN && role != UserRole.PROMOTER) {
+        if (role != UserRole.ADMIN && role != UserRole.PROMOTER && role != UserRole.ENTRANCE_MANAGER) {
             return false
         }
 
@@ -75,6 +75,15 @@ class UserService {
             .select { ClubStaffTable.userId eq staffId }
             .map { it[ClubStaffTable.clubId] }
             .singleOrNull()
+    }
+
+    /**
+     * Возвращает список клубов, к которым привязан сотрудник.
+     */
+    fun getStaffClubIds(staffId: Long): List<Int> = transaction {
+        ClubStaffTable
+            .select { ClubStaffTable.userId eq staffId }
+            .map { it[ClubStaffTable.clubId] }
     }
 
     fun getAllUserIds(): List<Long> = transaction {

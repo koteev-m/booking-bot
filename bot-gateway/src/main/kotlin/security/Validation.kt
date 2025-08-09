@@ -1,6 +1,6 @@
 package security
 
-import io.ktor.server.plugins.requestvalidation.ValidationException
+import io.ktor.server.plugins.requestvalidation.ValidationResult
 
 /**
  * Collection of validation helper functions.
@@ -8,15 +8,11 @@ import io.ktor.server.plugins.requestvalidation.ValidationException
 object ValidationRules {
     private val phoneRegex = Regex("^\\+?\\d{10,14}$")
 
-    fun validatePhone(phone: String) {
-        if (!phoneRegex.matches(phone)) {
-            throw ValidationException("Invalid phone format")
-        }
-    }
+    fun validatePhone(phone: String): ValidationResult =
+        if (phoneRegex.matches(phone)) ValidationResult.Valid
+        else ValidationResult.Invalid("Invalid phone format")
 
-    fun validateGuestName(name: String) {
-        if (name.isBlank()) {
-            throw ValidationException("Guest name is blank")
-        }
-    }
+    fun validateGuestName(name: String): ValidationResult =
+        if (name.isBlank()) ValidationResult.Invalid("Guest name is blank")
+        else ValidationResult.Valid
 }

@@ -1,24 +1,18 @@
 package com.bookingbot.gateway
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.ratelimit.RateLimit
-import io.ktor.server.plugins.ratelimit.RateLimitExceededException
-import io.ktor.server.plugins.requestvalidation.RequestValidation
-import io.ktor.server.plugins.requestvalidation.RequestValidationException
-import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.ratelimit.*
+import io.ktor.server.plugins.requestvalidation.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.respond
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
+import org.koin.ktor.ext.get
 import security.ValidationRules
-import com.bookingbot.gateway.GuestDTO
-import com.bookingbot.gateway.RateLimitConfig
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.gateway.waitlist.WaitlistScheduler
 import com.bookingbot.gateway.ConfigProvider
-import org.koin.ktor.ext.get
-import sun.security.util.KeyUtil.validate
 
 fun main() {
     embeddedServer(
@@ -33,19 +27,36 @@ fun Application.module() {
     configureDI()
     val scheduler = WaitlistScheduler(get(), ConfigProvider.botConfig.waitlist.periodMs)
     scheduler.start()
+
     configureAuth()
+
     val rateLimitConf = RateLimitConfig.load()
     install(RateLimit) {
-        global { limit(window = rateLimitConf.window, maxRequests = rateLimitConf.requests) }
-    }
-    install(RequestValidation) {
-        validate<String> { ValidationRules.validatePhone(it) }
-        validate<GuestDTO> { ValidationRules.validateGuestName(it.name) }
-        validate<BookingRequest> {
-            it.phone?.let { p -> ValidationRules.validatePhone(p) }
-            it.bookingGuestName?.let { n -> ValidationRules.validateGuestName(n) }
+        global {
+            rateLimiter(limit = rateLimitConf.requests, refillPeriod = rateLimitConf.window)
         }
     }
+
+    install(RequestValidation) {
+        validate<String> { phone ->
+            ValidationRules.validatePhone(phone)
+        }
+        validate<GuestDTO> { dto ->
+            ValidationRules.validateGuestName(dto.name)
+        }
+        validate<BookingRequest> { br ->
+            br.phone?.let { p ->
+                val res = ValidationRules.validatePhone(p)
+                if (res is ValidationResult.Invalid) return@validate res
+            }
+            br.bookingGuestName?.let { n ->
+                val res = ValidationRules.validateGuestName(n)
+                if (res is ValidationResult.Invalid) return@validate res
+            }
+            ValidationResult.Valid
+        }
+    }
+
     install(StatusPages) {
         exception<RequestValidationException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
@@ -54,6 +65,7 @@ fun Application.module() {
             call.respond(HttpStatusCode.TooManyRequests)
         }
     }
+
     configureMetrics()
     configureRouting()
 }

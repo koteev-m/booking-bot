@@ -1,7 +1,8 @@
 package com.bookingbot.gateway
 
 import com.typesafe.config.ConfigFactory
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Configuration for rate limiting.
@@ -14,7 +15,7 @@ data class RateLimitConfig(
         fun load(): RateLimitConfig {
             val cfg = ConfigFactory.load().getConfig("security.rateLimit")
             return RateLimitConfig(
-                window = cfg.getDuration("window"),
+                window = cfg.getDuration("window").toMillis().milliseconds,
                 requests = cfg.getInt("requests")
             )
         }

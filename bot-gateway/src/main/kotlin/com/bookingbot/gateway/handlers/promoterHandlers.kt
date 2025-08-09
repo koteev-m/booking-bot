@@ -4,6 +4,7 @@ import com.bookingbot.gateway.TelegramApi
 import com.bookingbot.api.model.UserRole
 import com.bookingbot.api.services.ClubService
 import com.bookingbot.api.services.UserService
+import com.bookingbot.api.services.GuestListService
 import com.bookingbot.gateway.fsm.State
 import com.bookingbot.gateway.fsm.StateStorageImpl
 import com.bookingbot.gateway.util.StateFilter
@@ -16,7 +17,7 @@ import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import com.bookingbot.gateway.util.CallbackData
 import com.github.kotlintelegrambot.extensions.filters.Filter
 
-fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubService: ClubService) {
+fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubService: ClubService, guestListService: GuestListService) {
 
     // Шаг 1: Промоутер нажимает "Бронь для гостя"
     dispatcher.callbackQuery(CallbackData.PROMOTER_START_BOOKING) {
@@ -63,5 +64,67 @@ fun addPromoterHandlers(dispatcher: Dispatcher, userService: UserService, clubSe
 
         // Переводим промоутера в состояние выбора клуба, чтобы FSM гостя подхватил диалог
         StateStorageImpl.saveState(promoterId, State.ClubSelection)
+    }
+
+    // Промоутер добавляет гостя в список
+    dispatcher.callbackQuery(CallbackData.PROMOTER_ADD_GUEST) {
+        val promoterId = callbackQuery.from.id
+        val promoter = userService.findOrCreateUser(promoterId, callbackQuery.from.username)
+
+        if (promoter.role != UserRole.PROMOTER && promoter.role != UserRole.OWNER) {
+            bot.answerCallbackQuery(callbackQuery.id, text = "Эта функция доступна только для промоутеров.", showAlert = true)
+            return@callbackQuery
+        }
+
+        val clubIds = userService.getStaffClubIds(promoterId)
+        val clubs = clubIds.mapNotNull { clubService.findClubById(it) }.filter { it.hasGuestList }
+
+        if (clubs.isEmpty()) {
+            bot.answerCallbackQuery(callbackQuery.id, text = "Нет доступных клубов со списком гостей.", showAlert = true)
+            return@callbackQuery
+        }
+
+        val buttons = clubs.map {
+            InlineKeyboardButton.CallbackData(it.name, "${CallbackData.PROMOTER_GUESTLIST_CLUB_PREFIX}${it.id}")
+        }.chunked(2)
+
+        TelegramApi.sendMessage(
+            chatId = ChatId.fromId(promoterId),
+            text = "Выберите клуб:",
+            replyMarkup = InlineKeyboardMarkup.create(buttons)
+        )
+    }
+
+    dispatcher.callbackQuery {
+        val data = callbackQuery.data ?: return@callbackQuery
+        when {
+            data.startsWith(CallbackData.PROMOTER_GUESTLIST_CLUB_PREFIX) -> {
+                val promoterId = callbackQuery.from.id
+                val clubId = data.removePrefix(CallbackData.PROMOTER_GUESTLIST_CLUB_PREFIX).toInt()
+                StateStorageImpl.getContext(promoterId).clubId = clubId
+                StateStorageImpl.saveState(promoterId, State.PromoterGuestListNameInput)
+                TelegramApi.sendMessage(
+                    chatId = ChatId.fromId(promoterId),
+                    text = "Введите имя и фамилию гостя:"
+                )
+            }
+        }
+    }
+
+    dispatcher.message(Filter.Text and StateFilter(State.PromoterGuestListNameInput)) {
+        val promoterId = message.from?.id ?: return@message
+        val text = message.text ?: return@message
+        val parts = text.trim().split(" ")
+        if (parts.size < 2) {
+            TelegramApi.sendMessage(ChatId.fromId(promoterId), "Введите имя и фамилию через пробел.")
+            return@message
+        }
+        val firstName = parts.first()
+        val lastName = parts.drop(1).joinToString(" ")
+        val clubId = StateStorageImpl.getContext(promoterId).clubId ?: return@message
+        val success = guestListService.addGuest(promoterId, clubId, firstName, lastName)
+        val response = if (success) "Гость добавлен в список." else "Не удалось добавить гостя. Список может быть выключен или заполнен."
+        TelegramApi.sendMessage(ChatId.fromId(promoterId), response)
+        StateStorageImpl.clearState(promoterId)
     }
 }

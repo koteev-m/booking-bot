@@ -32,8 +32,14 @@ object Menus {
     }
 
     fun promoterMenu(): InlineKeyboardMarkup {
-        // ...
-        return guestMenu() // Заглушка
+        return InlineKeyboardMarkup.create(
+            listOf(
+                listOf(InlineKeyboardButton.CallbackData(text = "Бронь для гостя", callbackData = CallbackData.PROMOTER_START_BOOKING)),
+                listOf(InlineKeyboardButton.CallbackData(text = "Мои брони", callbackData = CallbackData.PROMOTER_MY_BOOKINGS)),
+                listOf(InlineKeyboardButton.CallbackData(text = "Добавить в список гостей", callbackData = CallbackData.PROMOTER_ADD_GUEST)),
+                listOf(backToMainMenuButton)
+            )
+        )
     }
 
     fun adminMenu(): InlineKeyboardMarkup {

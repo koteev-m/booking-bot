@@ -75,7 +75,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         if (commandParts.size != 3) {
             TelegramApi.sendMessage(
                 ChatId.fromId(requesterId),
-                "Неверный формат. Используйте: `/setrole <ID пользователя> <ROLE>`\nДоступные роли: GUEST, PROMOTER, ADMIN, OWNER",
+                "Неверный формат. Используйте: `/setrole <ID пользователя> <ROLE>`\nДоступные роли: GUEST, PROMOTER, ADMIN, OWNER, ENTRANCE_MANAGER",
                 parseMode = ParseMode.MARKDOWN
             )
             return@command
@@ -92,7 +92,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         val newRole = try {
             UserRole.valueOf(roleName)
         } catch (e: IllegalArgumentException) {
-            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN, OWNER.")
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: GUEST, PROMOTER, ADMIN, OWNER, ENTRANCE_MANAGER.")
             return@command
         }
 
@@ -117,7 +117,7 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
         if (commandParts.size != 4) {
             TelegramApi.sendMessage(
                 ChatId.fromId(requesterId),
-                "Неверный формат. Используйте: `/addstaff <ID пользователя> <ID клуба> <ROLE>`\nРоли: ADMIN, PROMOTER",
+                "Неверный формат. Используйте: `/addstaff <ID пользователя> <ID клуба> <ROLE>`\nРоли: ADMIN, PROMOTER, ENTRANCE_MANAGER",
                 parseMode = ParseMode.MARKDOWN
             )
             return@command
@@ -134,8 +134,8 @@ fun addAdminHandlers(dispatcher: Dispatcher, userService: UserService, clubServi
 
         val role = try { UserRole.valueOf(roleName) } catch (e: Exception) { null }
 
-        if (role != UserRole.ADMIN && role != UserRole.PROMOTER) {
-            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: ADMIN, PROMOTER.")
+        if (role != UserRole.ADMIN && role != UserRole.PROMOTER && role != UserRole.ENTRANCE_MANAGER) {
+            TelegramApi.sendMessage(ChatId.fromId(requesterId), "Неверная роль. Доступные: ADMIN, PROMOTER, ENTRANCE_MANAGER.")
             return@command
         }
 

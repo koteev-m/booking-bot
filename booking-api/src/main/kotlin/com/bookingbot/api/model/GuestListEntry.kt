@@ -5,5 +5,6 @@ data class GuestListEntry(
     val clubId: Int,
     val promoterId: Long,
     val firstName: String,
-    val lastName: String
+    val lastName: String,
+    val checkedIn: Boolean
 )

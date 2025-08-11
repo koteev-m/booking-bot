@@ -33,8 +33,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
 
     // ---- Telegram Bot API ----
-    implementation("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:$telegramBotVersion")
-
+    implementation(libs.telegram.bot)
     // ---- DI (Koin) ----
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")

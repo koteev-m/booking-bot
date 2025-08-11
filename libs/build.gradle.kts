@@ -1,16 +1,13 @@
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-
 plugins {
-    kotlin("jvm")
-    `java-library`
+    // версии заданы в settings.pluginManagement
+    kotlin("jvm")                  apply false
+    kotlin("plugin.serialization") apply false
+    id("com.gradleup.shadow")      apply false
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+subprojects {
+    // JUnit 5 для всех модулей
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
     }
-}
-
-dependencies {
-    // api("com.some:shared-lib:1.2.3")
 }

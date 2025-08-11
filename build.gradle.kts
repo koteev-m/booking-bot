@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.9.24" apply false
-    kotlin("plugin.serialization") version "1.9.24" apply false
-    id("com.gradleup.shadow") version "9.0.0" apply false
+    kotlin("jvm") version libs.versions.kotlin.get() apply false
+    kotlin("plugin.serialization") version libs.versions.kotlin.get() apply false
+    id("com.github.johnrengelman.shadow") apply false // редиректнётся на 9.0.0 через settings.gradle.kts
 }
 
 subprojects {

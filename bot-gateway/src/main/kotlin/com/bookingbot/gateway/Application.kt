@@ -1,18 +1,26 @@
 package com.bookingbot.gateway
 
+import GuestDTO
+import com.apple.eawt.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.ratelimit.*
-import io.ktor.server.plugins.requestvalidation.*
-import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.ratelimit.RateLimit
+import io.ktor.server.plugins.ratelimit.RateLimitConfig as KtorRateLimitConfig
+import io.ktor.server.plugins.ratelimit.RateLimitExceededException
+import io.ktor.server.plugins.requestvalidation.RequestValidation
+import io.ktor.server.plugins.requestvalidation.RequestValidationException
+import io.ktor.server.plugins.requestvalidation.ValidationResult
+import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import org.koin.ktor.ext.get
-import security.ValidationRules
 import com.bookingbot.api.model.booking.BookingRequest
 import com.bookingbot.gateway.waitlist.WaitlistScheduler
-import com.bookingbot.gateway.ConfigProvider
+import security.ValidationRules
+import sun.security.util.KeyUtil.validate
+import java.lang.foreign.Arena.global
 
 fun main() {
     embeddedServer(
@@ -24,12 +32,17 @@ fun main() {
 }
 
 fun Application.module() {
+    // DI
     configureDI()
+
+    // фоновые задачи (лист ожидания)
     val scheduler = WaitlistScheduler(get(), ConfigProvider.botConfig.waitlist.periodMs)
     scheduler.start()
 
+    // auth
     configureAuth()
 
+    // rate limit
     val rateLimitConf = RateLimitConfig.load()
     install(RateLimit) {
         global {
@@ -37,26 +50,30 @@ fun Application.module() {
         }
     }
 
+    // валидация запросов
     install(RequestValidation) {
-        validate<String> { phone ->
-            ValidationRules.validatePhone(phone)
-        }
-        validate<GuestDTO> { dto ->
-            ValidationRules.validateGuestName(dto.name)
-        }
+        validate<String> { phone -> ValidationRules.validatePhone(phone) }
+
+        validate<GuestDTO> { dto -> ValidationRules.validateGuestName(dto.name) }
+
         validate<BookingRequest> { br ->
             br.phone?.let { p ->
-                val res = ValidationRules.validatePhone(p)
-                if (res is ValidationResult.Invalid) return@validate res
+                when (val res = ValidationRules.validatePhone(p)) {
+                    is ValidationResult.Invalid -> return@validate res
+                    else -> {}
+                }
             }
             br.bookingGuestName?.let { n ->
-                val res = ValidationRules.validateGuestName(n)
-                if (res is ValidationResult.Invalid) return@validate res
+                when (val res = ValidationRules.validateGuestName(n)) {
+                    is ValidationResult.Invalid -> return@validate res
+                    else -> {}
+                }
             }
             ValidationResult.Valid
         }
     }
 
+    // обработка ошибок
     install(StatusPages) {
         exception<RequestValidationException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
@@ -66,6 +83,7 @@ fun Application.module() {
         }
     }
 
+    // метрики и роуты
     configureMetrics()
     configureRouting()
 }

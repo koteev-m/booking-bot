@@ -23,7 +23,7 @@ dependencies {
     api("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
     implementation("org.postgresql:postgresql:$postgresVersion")
-    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.zaxxer:HikariCP:7.0.1")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.typesafe:config:1.4.3")
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")

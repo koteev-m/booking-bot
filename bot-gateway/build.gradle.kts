@@ -40,7 +40,7 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
     // ---- Logging ----
-    implementation("ch.qos.logback:logback-classic:1.4.7")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 
     // ---- Tests ----
     testImplementation(platform("org.junit:junit-bom:5.10.2"))

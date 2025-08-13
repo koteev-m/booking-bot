@@ -1,32 +1,27 @@
 pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            // Страховка на случай, если где-то остался старый ID Shadow:
+            // принудительно маппим com.github.johnrengelman.shadow -> новый модуль GradleUp Shadow 9.0.1
+            if (requested.id.id == "com.github.johnrengelman.shadow") {
+                useModule("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.1")
+            }
+        }
+    }
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        maven("https://jitpack.io")
-    }
-    // единая реализация Shadow 9.0.0 (новая группа com.gradleup.shadow)
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "com.github.johnrengelman.shadow") {
-                useModule("com.gradleup.shadow:shadow-gradle-plugin:9.0.0")
-            }
-        }
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    // Централизуем репозитории: запрещаем объявлять их в проектах/модулях
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
-        maven("https://jitpack.io") // нужен для Telegram 6.3.0 (JitPack)
+        maven("https://jitpack.io")
     }
-    // versionCatalogs НЕ трогаем — Gradle сам подхватывает gradle/libs.versions.toml
 }
 
-rootProject.name = "booking_bot"
-include(
-    "booking-api",
-    "bot-gateway",
-    "bot-gateway-e2e", // оставил, если у тебя есть модуль; можно удалить, если не нужен
-    "libs"             // то же самое
-)
+rootProject.name = "booking-bot"
+include("booking-api", "bot-gateway")

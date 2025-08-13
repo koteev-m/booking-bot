@@ -1,11 +1,9 @@
 import org.gradle.jvm.toolchain.JavaLanguageVersion
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-// ВАЖНО: id старый, но через settings.gradle.kts подтянется com.gradleup.shadow:9.0.0
 
 plugins {
-    kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.github.johnrengelman.shadow")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.shadow)
 }
 
 group = "com.bookingbot"
@@ -43,11 +41,6 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.ktor.server.test.host)
-}
-
-// fat-jar (bot-gateway-all.jar)
-tasks.named<ShadowJar>("shadowJar") {
-    archiveClassifier.set("all")
 }
 
 tasks.test { useJUnitPlatform() }

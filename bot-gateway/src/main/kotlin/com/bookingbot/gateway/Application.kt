@@ -1,37 +1,35 @@
 package com.bookingbot.gateway
 
 import GuestDTO
-import com.apple.eawt.Application
+import com.bookingbot.api.model.booking.BookingRequest
+import com.bookingbot.gateway.waitlist.WaitlistScheduler
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
+import io.ktor.server.application.Application as KtorApplication
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.ratelimit.RateLimit
-import io.ktor.server.plugins.ratelimit.RateLimitConfig as KtorRateLimitConfig
-import io.ktor.server.plugins.ratelimit.RateLimitExceededException
+import io.ktor.server.plugins.ratelimit.rateLimiter
 import io.ktor.server.plugins.requestvalidation.RequestValidation
 import io.ktor.server.plugins.requestvalidation.RequestValidationException
 import io.ktor.server.plugins.requestvalidation.ValidationResult
+import io.ktor.server.plugins.requestvalidation.validate as validateRequest
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.statuspages.exception
+import io.ktor.server.plugins.statuspages.status
 import io.ktor.server.response.respond
 import org.koin.ktor.ext.get
-import com.bookingbot.api.model.booking.BookingRequest
-import com.bookingbot.gateway.waitlist.WaitlistScheduler
 import security.ValidationRules
-import sun.security.util.KeyUtil.validate
-import java.lang.foreign.Arena.global
 
 fun main() {
     embeddedServer(
         Netty,
         port = 8080,
-        host = "0.0.0.0",
-        module = Application::module
-    ).start(wait = true)
+        host = "0.0.0.0"
+    ) { module() }.start(wait = true)
 }
 
-fun Application.module() {
+fun KtorApplication.module() {
     // DI
     configureDI()
 
@@ -42,48 +40,43 @@ fun Application.module() {
     // auth
     configureAuth()
 
-    // rate limit
+    // Rate limit
     val rateLimitConf = RateLimitConfig.load()
     install(RateLimit) {
         global {
-            rateLimiter(limit = rateLimitConf.requests, refillPeriod = rateLimitConf.window)
+            rateLimiter(
+                limit = rateLimitConf.requests,
+                refillPeriod = rateLimitConf.window
+            )
         }
     }
 
-    // валидация запросов
+    // Валидация входящих запросов
     install(RequestValidation) {
-        validate<String> { phone -> ValidationRules.validatePhone(phone) }
+        validateRequest<String> { phone -> ValidationRules.validatePhone(phone) }
+        validateRequest<GuestDTO> { dto -> ValidationRules.validateGuestName(dto.name) }
+        validateRequest<BookingRequest> { br ->
+            val phoneValidation = br.phone?.let(ValidationRules::validatePhone) ?: ValidationResult.Valid
+            if (phoneValidation is ValidationResult.Invalid) return@validateRequest phoneValidation
 
-        validate<GuestDTO> { dto -> ValidationRules.validateGuestName(dto.name) }
+            val guestNameValidation = br.bookingGuestName?.let(ValidationRules::validateGuestName) ?: ValidationResult.Valid
+            if (guestNameValidation is ValidationResult.Invalid) return@validateRequest guestNameValidation
 
-        validate<BookingRequest> { br ->
-            br.phone?.let { p ->
-                when (val res = ValidationRules.validatePhone(p)) {
-                    is ValidationResult.Invalid -> return@validate res
-                    else -> {}
-                }
-            }
-            br.bookingGuestName?.let { n ->
-                when (val res = ValidationRules.validateGuestName(n)) {
-                    is ValidationResult.Invalid -> return@validate res
-                    else -> {}
-                }
-            }
             ValidationResult.Valid
         }
     }
 
-    // обработка ошибок
+    // Ошибки/статусы
     install(StatusPages) {
-        exception<RequestValidationException> { call, _ ->
-            call.respond(HttpStatusCode.BadRequest)
+        exception<RequestValidationException> { call, cause ->
+            call.respond(HttpStatusCode.BadRequest, cause.reasons.joinToString())
         }
-        exception<RateLimitExceededException> { call, _ ->
-            call.respond(HttpStatusCode.TooManyRequests)
+        status(HttpStatusCode.TooManyRequests) { call, status ->
+            call.respond(status)
         }
     }
 
-    // метрики и роуты
+    // Метрики и роутинг
     configureMetrics()
     configureRouting()
 }

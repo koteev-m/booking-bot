@@ -4,7 +4,7 @@ pluginManagement {
             // Страховка на случай, если где-то остался старый ID Shadow:
             // принудительно маппим com.github.johnrengelman.shadow -> новый модуль GradleUp Shadow 9.0.1
             if (requested.id.id == "com.github.johnrengelman.shadow") {
-                useModule("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.1")
+                useModule("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.1.0")
             }
         }
     }
